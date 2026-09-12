@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="de"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<meta name="description" content="Till – Minecraft, Gaming, Entwicklung und kreative Projekte.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<title>Projekte | Till Gaming & Dev</title></head>
+<body data-page="projects">
+
+<header class="site-header">
+  <a class="brand" href="/" aria-label="Startseite">
+    <span class="brand-mark">T</span>
+    <span class="brand-copy"><b>TILL</b><small>GAMING & DEV</small></span>
+  </a>
+  <button class="menu-toggle" aria-label="Navigation öffnen" aria-expanded="false">☰</button>
+  <nav class="main-nav">
+    <a data-nav="home" href="/">Home</a>
+    <a data-nav="projects" href="/projekte">Projekte</a>
+    <a data-nav="support" href="/unterstuetzen">Unterstützen</a>
+    <a data-nav="contact" href="/kontakt">Kontakt</a>
+  </nav>
+</header>
+
+<main>
+<section class="page-hero compact">
+  <span class="eyebrow">PROJECT HUB</span>
+  <h1>Meine Projekte.</h1>
+  <p>Minecraft, Gaming und Development – hier findest du alles gesammelt.</p>
+</section>
+
+<section class="section">
+  <div class="filter-bar">
+    <button class="filter active" data-filter="all">Alle</button>
+    <button class="filter" data-filter="minecraft">Minecraft</button>
+    <button class="filter" data-filter="gaming">Gaming</button>
+    <button class="filter" data-filter="dev">Development</button>
+    <button class="filter" data-filter="youtube">YouTube</button>
+  </div>
+
+  <div class="projects-grid" id="projectsGrid">
+    <article class="project-card" data-category="minecraft">
+      <div class="project-thumb thumb-green"><span>VOXEL</span></div>
+      <div class="project-content"><div class="project-meta"><span class="pill">Minecraft</span><span class="status active">Aktiv</span></div>
+      <h3>VoxelWorld / MLGRush</h3><p>Eigener Minecraft-Spielmodus mit Lobby-System, Custom Items und Resourcepack.</p>
+      <div class="tech-tags"><span>Paper</span><span>Java</span><span>Resourcepack</span></div></div>
+    </article>
+
+    <article class="project-card" data-category="dev">
+      <div class="project-thumb thumb-blue"><span>112</span></div>
+      <div class="project-content"><div class="project-meta"><span class="pill">Development</span><span class="status active">Aktiv</span></div>
+      <h3>Leitstellen Manager</h3><p>Management-Spiel mit Einsätzen, Karte, Fahrzeugverwaltung und eigenen Systemen.</p>
+      <div class="tech-tags"><span>JavaScript</span><span>Node.js</span><span>Game UI</span></div></div>
+    </article>
+
+    <article class="project-card" data-category="minecraft">
+      <div class="project-thumb thumb-purple"><span>AC</span></div>
+      <div class="project-content"><div class="project-meta"><span class="pill">Minecraft</span><span class="status">Konzept</span></div>
+      <h3>AntiCheat Experimente</h3><p>Tests und kreative Systeme rund um Minecraft-Server und Sicherheit.</p>
+      <div class="tech-tags"><span>Java</span><span>Paper</span></div></div>
+    </article>
+
+    <article class="project-card" data-category="youtube">
+      <div class="project-thumb thumb-red"><span>▶</span></div>
+      <div class="project-content"><div class="project-meta"><span class="pill">YouTube</span><span class="status active">Laufend</span></div>
+      <h3>Gaming Shorts</h3><p>Kurze Highlights, Trends, Challenges und Clips für YouTube Shorts.</p>
+      <div class="tech-tags"><span>Shorts</span><span>Editing</span></div></div>
+    </article>
+
+    <article class="project-card" data-category="gaming">
+      <div class="project-thumb thumb-orange"><span>SIM</span></div>
+      <div class="project-content"><div class="project-meta"><span class="pill">Gaming</span><span class="status">Idee</span></div>
+      <h3>Simulator Konzepte</h3><p>Eigene Ideen für Management- und Simulationsspiele.</p>
+      <div class="tech-tags"><span>Game Design</span><span>UI</span></div></div>
+    </article>
+
+    <article class="project-card" data-category="dev">
+      <div class="project-thumb thumb-cyan"><span>WEB</span></div>
+      <div class="project-content"><div class="project-meta"><span class="pill">Development</span><span class="status active">Neu</span></div>
+      <h3>Creator Website</h3><p>Diese Website als zentrale Plattform für Kanal, Projekte, Shop und Kontakt.</p>
+      <div class="tech-tags"><span>HTML</span><span>CSS</span><span>JavaScript</span></div></div>
+    </article>
+  </div>
+  <p id="emptyProjects" class="empty-state" hidden>Keine Projekte in dieser Kategorie gefunden.</p>
+</section>
+
+<section class="section section-dark">
+  <div class="cta">
+    <div><span class="eyebrow">NEUE IDEE?</span><h2>Projekt in Arbeit.</h2><p>Weitere Projekte und Downloads können später direkt hier ergänzt werden.</p></div>
+    <a class="btn btn-primary" href="/kontakt">Kontakt</a>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div>
+      <a class="brand footer-brand" href="/">
+        <span class="brand-mark">T</span>
+        <span class="brand-copy"><b>TILL</b><small>GAMING & DEV</small></span>
+      </a>
+      <p>Minecraft, Gaming, Informatik und eigene kreative Projekte.</p>
+    </div>
+    <div>
+      <h4>Entdecken</h4>
+      <a href="/projekte">Projekte</a>
+      <a href="/unterstuetzen">Unterstützen</a>
+      <a href="/kontakt">Kontakt</a>
+    </div>
+    <div>
+      <h4>Rechtliches</h4>
+      <a href="/impressum">Impressum</a>
+      <a href="/impressum#datenschutz">Datenschutz</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© <span data-year></span> Till</span>
+    <span>Made for Gaming & Creative Projects</span>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+<script src="script.js"></script></body></html>

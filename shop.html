@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<meta name="description" content="Till – Minecraft, Gaming, Entwicklung und kreative Projekte.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<title>Unterstützen | Till Gaming & Dev</title></head>
+<body data-page="support">
+
+<header class="site-header">
+  <a class="brand" href="/" aria-label="Startseite">
+    <span class="brand-mark">T</span>
+    <span class="brand-copy"><b>TILL</b><small>GAMING & DEV</small></span>
+  </a>
+  <button class="menu-toggle" aria-label="Navigation öffnen" aria-expanded="false">☰</button>
+  <nav class="main-nav">
+    <a data-nav="home" href="/">Home</a>
+    <a data-nav="projects" href="/projekte">Projekte</a>
+    <a data-nav="support" href="/unterstuetzen">Unterstützen</a>
+    <a data-nav="contact" href="/kontakt">Kontakt</a>
+  </nav>
+</header>
+
+<main>
+<section class="page-hero compact">
+  <span class="eyebrow">PROJEKTE UNTERSTÜTZEN</span>
+  <h1>Freiwillig unterstützen.</h1>
+  <p>Wenn dir meine Projekte gefallen, kannst du sie freiwillig unterstützen. Die Unterstützung ist keine Bezahlung für eine Leistung und es entsteht kein Anspruch auf ein Produkt oder eine Gegenleistung.</p>
+</section>
+
+
+<section class="section support-section">
+  <div class="support-intro">
+    <span class="eyebrow">FREIWILLIGE UNTERSTÜTZUNG</span>
+    <h2>Hilf mit, neue Projekte möglich zu machen.</h2>
+    <p>
+      Meine Projekte entstehen aus Freude an Minecraft, Gaming, Informatik und kreativen Ideen.
+      Wenn du möchtest, kannst du mich freiwillig unterstützen. Deine Unterstützung hilft zum Beispiel
+      bei Hosting, Software, Entwicklung, Grafiken oder neuen Projektideen.
+    </p>
+    <div class="support-note">
+      <strong>Wichtig:</strong> Die Unterstützung ist freiwillig und keine Bezahlung für eine Ware oder Dienstleistung.
+      Es gibt keine garantierte Gegenleistung und keinen Anspruch auf bestimmte Inhalte.
+    </div>
+  </div>
+
+  <div class="support-grid">
+    <article class="support-card">
+      <div class="support-icon">☕</div>
+      <span class="pill">Kleine Unterstützung</span>
+      <h3>Projekt-Kaffee</h3>
+      <p>Ein kleiner freiwilliger Beitrag für laufende Projekte, Hosting und neue Ideen.</p>
+      <button class="support-btn" data-support="5">CHF 5 unterstützen</button>
+    </article>
+
+    <article class="support-card featured">
+      <div class="support-icon">🚀</div>
+      <span class="pill">Projekt-Support</span>
+      <h3>Projekt fördern</h3>
+      <p>Unterstütze die Weiterentwicklung meiner Minecraft-, Gaming- und Informatik-Projekte.</p>
+      <button class="support-btn" data-support="10">CHF 10 unterstützen</button>
+    </article>
+
+    <article class="support-card">
+      <div class="support-icon">💚</div>
+      <span class="pill">Mehr Support</span>
+      <h3>Grosses Dankeschön</h3>
+      <p>Für alle, die meine kreativen Projekte besonders unterstützen möchten.</p>
+      <button class="support-btn" data-support="20">CHF 20 unterstützen</button>
+    </article>
+  </div>
+
+  <div class="custom-support">
+    <div>
+      <span class="eyebrow">EIGENER BETRAG</span>
+      <h3>Du entscheidest selbst.</h3>
+      <p>Du kannst später auch einen eigenen freiwilligen Unterstützungsbetrag wählen.</p>
+    </div>
+    <div class="custom-support-box">
+      <span>CHF</span>
+      <input id="customSupportAmount" type="number" min="1" step="1" placeholder="z. B. 15">
+      <button class="btn btn-primary" id="customSupportBtn">Unterstützen</button>
+    </div>
+  </div>
+
+  <div class="support-transparency">
+    <h3>Wofür wird die Unterstützung verwendet?</h3>
+    <div class="transparency-grid">
+      <div><b>Server & Hosting</b><span>Für Webseiten, Gameserver und Projekt-Systeme.</span></div>
+      <div><b>Entwicklung</b><span>Für Tools, Software und technische Erweiterungen.</span></div>
+      <div><b>Kreative Projekte</b><span>Für neue Minecraft-, Gaming- und Video-Ideen.</span></div>
+      <div><b>Community</b><span>Für grössere und bessere Projekte auf dem Kanal.</span></div>
+    </div>
+  </div>
+
+  <div class="support-warning">
+    Aktuell ist dies noch eine Demo. Es ist noch kein Zahlungsanbieter verbunden und es wird kein Geld übertragen.
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div>
+      <a class="brand footer-brand" href="/">
+        <span class="brand-mark">T</span>
+        <span class="brand-copy"><b>TILL</b><small>GAMING & DEV</small></span>
+      </a>
+      <p>Minecraft, Gaming, Informatik und eigene kreative Projekte.</p>
+    </div>
+    <div>
+      <h4>Entdecken</h4>
+      <a href="/projekte">Projekte</a>
+      <a href="/unterstuetzen">Unterstützen</a>
+      <a href="/kontakt">Kontakt</a>
+    </div>
+    <div>
+      <h4>Rechtliches</h4>
+      <a href="/impressum">Impressum</a>
+      <a href="/impressum#datenschutz">Datenschutz</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© <span data-year></span> Till</span>
+    <span>Made for Gaming & Creative Projects</span>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status"></div>
+<script src="script.js"></script></body></html>

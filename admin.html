@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e14">
+<title>Admin Login | Till Gaming & Dev</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-body">
+<main class="admin-shell">
+  <section class="admin-card login-card" id="loginView">
+    <div class="admin-logo">T</div>
+    <span class="eyebrow">ADMIN LOGIN</span>
+    <h1>Willkommen zurück.</h1>
+    <p>Melde dich an, um Einstellungen deiner Webseite zu verwalten.</p>
+
+    <form id="adminLoginForm" class="admin-form">
+      <label>Benutzername
+        <input id="adminUser" autocomplete="username" required placeholder="Admin">
+      </label>
+      <label>Passwort
+        <input id="adminPassword" type="password" autocomplete="current-password" required placeholder="••••••••">
+      </label>
+      <button class="btn btn-primary full" type="submit">Einloggen</button>
+      <small id="adminLoginStatus">Geschützter Admin-Bereich</small>
+    </form>
+  </section>
+
+  <section class="admin-dashboard" id="dashboardView" hidden>
+    <header class="admin-topbar">
+      <div>
+        <span class="eyebrow">ADMIN PANEL</span>
+        <h1>Website Einstellungen</h1>
+      </div>
+      <div class="admin-actions">
+        <a class="btn btn-ghost" href="/">Webseite ansehen</a>
+        <button class="btn btn-ghost" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <div class="admin-grid">
+      <form class="admin-card admin-form" id="settingsForm">
+        <div class="admin-section-title">
+          <h2>Allgemein</h2>
+          <span>Website-Inhalte</span>
+        </div>
+
+        <label>Seitentitel
+          <input id="siteTitle" required>
+        </label>
+
+        <label>Hero-Text
+          <textarea id="heroText" rows="4" required></textarea>
+        </label>
+
+        <label>YouTube-Link
+          <input id="youtubeUrl" type="url" required>
+        </label>
+
+        <label>Kontakt-E-Mail
+          <input id="contactEmail" type="email" required>
+        </label>
+
+        <div class="admin-section-title">
+          <h2>Unterstützung</h2>
+          <span>Freiwillige Beträge</span>
+        </div>
+
+        <div class="form-row">
+          <label>Betrag 1
+            <input id="support1" type="number" min="1" required>
+          </label>
+          <label>Betrag 2
+            <input id="support2" type="number" min="1" required>
+          </label>
+        </div>
+        <label>Betrag 3
+          <input id="support3" type="number" min="1" required>
+        </label>
+
+        <button class="btn btn-primary" type="submit">Einstellungen speichern</button>
+        <small id="settingsStatus">Änderungen werden serverseitig gespeichert.</small>
+      </form>
+
+      <div class="admin-column">
+        <section class="admin-card">
+          <div class="admin-section-title">
+            <h2>Sicherheit</h2>
+            <span>Account</span>
+          </div>
+          <p class="admin-muted">Das Admin-Passwort wird nicht im Browser gespeichert. Login läuft über eine Server-Session.</p>
+          <div class="admin-security-list">
+            <div><b>Session Login</b><span>Aktiv</span></div>
+            <div><b>Passwort-Hash</b><span>bcrypt</span></div>
+            <div><b>Rate Limit Login</b><span>Aktiv</span></div>
+            <div><b>Admin API geschützt</b><span>Aktiv</span></div>
+          </div>
+        </section>
+
+        <section class="admin-card">
+          <div class="admin-section-title">
+            <h2>Admin Passwort</h2>
+            <span>Ändern</span>
+          </div>
+          <form id="passwordForm" class="admin-form compact-form">
+            <label>Aktuelles Passwort
+              <input id="currentPassword" type="password" required>
+            </label>
+            <label>Neues Passwort
+              <input id="newPassword" type="password" minlength="8" required>
+            </label>
+            <label>Neues Passwort wiederholen
+              <input id="newPassword2" type="password" minlength="8" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Passwort ändern</button>
+            <small id="passwordStatus"></small>
+          </form>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<script src="admin.js"></script>
+</body>
+</html>
