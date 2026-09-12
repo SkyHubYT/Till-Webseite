@@ -85,6 +85,37 @@ if(page) {
   if(active) active.classList.add('active');
 }
 
+// EVP-Mitgliedsbild auf Über-mich- und Projekte-Seite einbinden.
+(() => {
+  const imageSrc='/assets/evp-member.svg';
+
+  if(page==='about'){
+    const engagementSection=$$('.section.section-dark').find(section => section.textContent.includes('Ich möchte mit Projekten auch etwas bewegen'));
+    if(engagementSection && !engagementSection.querySelector('[data-evp-member-image]')){
+      const content=engagementSection.querySelector('div[style*="max-width:920px"]');
+      const card=document.createElement('div');
+      card.dataset.evpMemberImage='true';
+      card.className='project-card';
+      card.style.cssText='max-width:920px;margin:0 0 32px;overflow:hidden;background:#f4f5f7;border-color:rgba(255,221,0,.4)';
+      card.innerHTML=`<img src="${imageSrc}" alt="Till Scheidegger – Mitglied der EVP" style="display:block;width:100%;max-height:720px;object-fit:contain;background:#fff">`;
+      if(content) engagementSection.insertBefore(card,content);
+      else engagementSection.appendChild(card);
+    }
+  }
+
+  if(page==='projects'){
+    const evpCard=$$('.project-card[data-category="engagement"]').find(card => card.textContent.includes('EVP-Mitglied') || card.textContent.includes('Engagement für Menschen mit Behinderungen'));
+    if(evpCard && !evpCard.querySelector('[data-evp-member-image]')){
+      const thumb=evpCard.querySelector('.project-thumb');
+      if(thumb){
+        thumb.dataset.evpMemberImage='true';
+        thumb.style.cssText='height:320px;background:#f4f5f7;overflow:hidden';
+        thumb.innerHTML=`<img src="${imageSrc}" alt="Till Scheidegger – Mitglied der EVP" style="width:100%;height:100%;object-fit:contain;display:block">`;
+      }
+    }
+  }
+})();
+
 // Header scroll state, reveal animations and subtle cursor glow.
 const header=$('.site-header');
 const syncHeader=()=>header?.classList.toggle('is-scrolled',window.scrollY>18);
