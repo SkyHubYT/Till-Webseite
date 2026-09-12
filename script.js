@@ -1,3 +1,11 @@
+const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
+
+function normalizeYoutubeUrl(url){
+  const value = String(url || '').trim();
+  if(!value || /^https?:\/\/(www\.)?youtube\.com\/?$/i.test(value)) return DEFAULT_YOUTUBE_URL;
+  return value;
+}
+
 async function loadPublicSettings(){
   try{
     const res=await fetch('/api/settings');
@@ -6,8 +14,14 @@ async function loadPublicSettings(){
     if(s.siteTitle) document.title = document.title.replace('Till Gaming & Dev', s.siteTitle);
     const heroLead=document.querySelector('.hero .lead');
     if(heroLead && s.heroText) heroLead.textContent=s.heroText;
-    const ytLink=document.querySelector('a[href="https://www.youtube.com/"]');
-    if(ytLink && s.youtubeUrl) ytLink.href=s.youtubeUrl;
+
+    const youtubeUrl = normalizeYoutubeUrl(s.youtubeUrl);
+    document.querySelectorAll('a[data-youtube-link], a[href="https://www.youtube.com/"], a[href="https://youtube.com/"]').forEach(a=>{
+      a.href = youtubeUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+    });
+
     const mailLinks=[...document.querySelectorAll('a[href^="mailto:"]')];
     mailLinks.forEach(a=>{
       if(s.contactEmail){
@@ -34,20 +48,17 @@ $$('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
 const menuToggle = $('.menu-toggle');
 const nav = $('.main-nav');
 
-// Über mich und Team auf allen Seiten automatisch in die Haupt-/Hamburger-Navigation einfügen.
+// Auf jeder öffentlichen Seite exakt dieselbe Top-/Hamburger-Navigation anzeigen.
 if(nav){
-  const ensureNavLink = (href, label, navKey) => {
-    if(nav.querySelector(`a[href="${href}"]`)) return;
-    const link = document.createElement('a');
-    link.href = href;
-    link.textContent = label;
-    link.dataset.nav = navKey;
-    const supportLink = nav.querySelector('a[href="/unterstuetzen"]');
-    if(supportLink) nav.insertBefore(link, supportLink);
-    else nav.appendChild(link);
-  };
-  ensureNavLink('/ueber-mich', 'Über mich', 'about');
-  ensureNavLink('/team', 'Team', 'team');
+  const navItems = [
+    ['home', '/', 'Home'],
+    ['about', '/ueber-mich', 'Über mich'],
+    ['team', '/team', 'Team'],
+    ['projects', '/projekte', 'Projekte'],
+    ['support', '/unterstuetzen', 'Unterstützen'],
+    ['contact', '/kontakt', 'Kontakt']
+  ];
+  nav.innerHTML = navItems.map(([key, href, label]) => `<a data-nav="${key}" href="${href}">${label}</a>`).join('');
 }
 
 if(menuToggle && nav){
