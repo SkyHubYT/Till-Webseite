@@ -164,7 +164,12 @@ app.get('/api/contact/status', (req, res) => {
 });
 
 app.get('/api/payment/status', (req, res) => {
-  res.json({ enabled: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY), provider: 'stripe', currency: 'CHF' });
+  res.json({
+    enabled: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY),
+    provider: 'stripe',
+    currency: 'CHF',
+    methods: ['card', 'twint']
+  });
 });
 
 app.post('/api/payment/create-checkout-session', paymentLimiter, async (req, res) => {
@@ -181,6 +186,7 @@ app.post('/api/payment/create-checkout-session', paymentLimiter, async (req, res
   params.set('success_url', `${baseUrl}/zahlung-erfolgreich?session_id={CHECKOUT_SESSION_ID}`);
   params.set('cancel_url', `${baseUrl}/unterstuetzen?payment=cancelled`);
   params.set('payment_method_types[0]', 'card');
+  params.set('payment_method_types[1]', 'twint');
   params.set('line_items[0][price_data][currency]', 'chf');
   params.set('line_items[0][price_data][product_data][name]', 'Freiwillige Projekt-Unterstützung');
   params.set('line_items[0][price_data][product_data][description]', 'Freiwilliger Beitrag ohne Anspruch auf Ware oder Dienstleistung.');
