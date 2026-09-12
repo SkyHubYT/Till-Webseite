@@ -30,7 +30,6 @@
   <p>Wenn dir meine Projekte gefallen, kannst du sie freiwillig unterstützen. Die Unterstützung ist keine Bezahlung für eine Leistung und es entsteht kein Anspruch auf ein Produkt oder eine Gegenleistung.</p>
 </section>
 
-
 <section class="section support-section">
   <div class="support-intro">
     <span class="eyebrow">FREIWILLIGE UNTERSTÜTZUNG</span>
@@ -42,7 +41,7 @@
     </p>
     <div class="support-note">
       <strong>Wichtig:</strong> Die Unterstützung ist freiwillig und keine Bezahlung für eine Ware oder Dienstleistung.
-      Es gibt keine garantierte Gegenleistung und keinen Anspruch auf bestimmte Inhalte.
+      Es gibt keine garantierte Gegenleistung und keinen Anspruch auf bestimmte Inhalte. Es handelt sich nicht um eine steuerbegünstigte Spende.
     </div>
   </div>
 
@@ -76,13 +75,20 @@
     <div>
       <span class="eyebrow">EIGENER BETRAG</span>
       <h3>Du entscheidest selbst.</h3>
-      <p>Du kannst später auch einen eigenen freiwilligen Unterstützungsbetrag wählen.</p>
+      <p>Du kannst einen freiwilligen Betrag zwischen CHF 1 und CHF 200 wählen.</p>
     </div>
     <div class="custom-support-box">
       <span>CHF</span>
-      <input id="customSupportAmount" type="number" min="1" step="1" placeholder="z. B. 15">
+      <input id="customSupportAmount" type="number" min="1" max="200" step="1" placeholder="z. B. 15">
       <button class="btn btn-primary" id="customSupportBtn">Unterstützen</button>
     </div>
+  </div>
+
+  <div class="support-note" style="margin-top:22px">
+    <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+      <input id="paymentConsent" type="checkbox" style="margin-top:5px">
+      <span>Ich habe verstanden, dass die Unterstützung freiwillig ist, keine Ware oder Dienstleistung gekauft wird und Zahlungsdaten beim Zahlungsanbieter verarbeitet werden. <a href="/impressum#datenschutz" style="text-decoration:underline">Datenschutz lesen</a>. Wenn ich minderjährig bin, nutze ich eine Zahlung nur mit Zustimmung meiner Eltern oder Erziehungsberechtigten.</span>
+    </label>
   </div>
 
   <div class="support-transparency">
@@ -95,8 +101,8 @@
     </div>
   </div>
 
-  <div class="support-warning">
-    Aktuell ist dies noch eine Demo. Es ist noch kein Zahlungsanbieter verbunden und es wird kein Geld übertragen.
+  <div class="support-warning" id="paymentStatus">
+    Online-Zahlungen werden technisch vorbereitet. Solange kein Zahlungsanbieter aktiviert ist, wird kein Geld übertragen.
   </div>
 </section>
 
