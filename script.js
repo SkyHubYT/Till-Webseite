@@ -1,4 +1,3 @@
-
 async function loadPublicSettings(){
   try{
     const res=await fetch('/api/settings');
@@ -34,7 +33,6 @@ async function loadPublicSettings(){
   }catch{}
 }
 loadPublicSettings();
-
 
 const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
@@ -87,21 +85,81 @@ if(projectButtons.length){
   if(param && ['minecraft','gaming','dev','youtube'].includes(param)) applyProjectFilter(param);
 }
 
+let paymentsEnabled = false;
 
-// Voluntary support demo
+async function loadPaymentStatus(){
+  const statusEl = $('#paymentStatus');
+  if(!statusEl) return;
+  try{
+    const res = await fetch('/api/payment/status', {cache:'no-store'});
+    const data = await res.json();
+    paymentsEnabled = Boolean(data.enabled);
+    statusEl.textContent = paymentsEnabled
+      ? 'Sichere Online-Zahlung ist aktiviert. Die Zahlungsabwicklung erfolgt auf der geschützten Seite des Zahlungsanbieters.'
+      : 'Online-Zahlungen sind noch nicht aktiviert. Es wird aktuell kein Geld übertragen.';
+  }catch{
+    paymentsEnabled = false;
+    statusEl.textContent = 'Der Zahlungsstatus konnte gerade nicht geladen werden. Es wird keine Zahlung gestartet.';
+  }
+}
+loadPaymentStatus();
+
+async function startSupportPayment(amount, button){
+  if(!paymentsEnabled){
+    toast('Online-Zahlungen sind noch nicht aktiviert');
+    return;
+  }
+
+  const consent = Boolean($('#paymentConsent')?.checked);
+  if(!consent){
+    toast('Bitte zuerst die Hinweise bestätigen');
+    $('#paymentConsent')?.focus();
+    return;
+  }
+
+  if(!Number.isFinite(amount) || amount < 1 || amount > 200){
+    toast('Bitte einen Betrag zwischen CHF 1 und CHF 200 wählen');
+    return;
+  }
+
+  const originalText = button?.textContent;
+  if(button){
+    button.disabled = true;
+    button.textContent = 'Zahlungsseite wird geöffnet...';
+  }
+
+  try{
+    const response = await fetch('/api/payment/create-checkout-session', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({amount, consent:true})
+    });
+    const data = await response.json().catch(()=>({}));
+    if(!response.ok || !data.url) throw new Error(data.error || 'Zahlung konnte nicht vorbereitet werden.');
+    window.location.assign(data.url);
+  }catch(err){
+    toast(err.message || 'Zahlung konnte nicht gestartet werden');
+    if(button){
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+}
+
 $$('.support-btn').forEach(btn => btn.addEventListener('click', () => {
-  const amount = Number(btn.dataset.support || 0);
-  toast(`Demo: CHF ${amount.toFixed(2)} Unterstützung gewählt`);
+  startSupportPayment(Number(btn.dataset.support || 0), btn);
 }));
 
 const customSupportBtn = $('#customSupportBtn');
 if(customSupportBtn){
   customSupportBtn.addEventListener('click', () => {
     const input = $('#customSupportAmount');
-    const amount = Number(input?.value || 0);
-    if(!amount || amount < 1) return toast('Bitte einen Betrag ab CHF 1 eingeben');
-    toast(`Demo: CHF ${amount.toFixed(2)} Unterstützung gewählt`);
+    startSupportPayment(Number(input?.value || 0), customSupportBtn);
   });
+}
+
+if(new URLSearchParams(location.search).get('payment') === 'cancelled'){
+  toast('Zahlung wurde abgebrochen – es wurde nichts belastet');
 }
 
 // Contact
