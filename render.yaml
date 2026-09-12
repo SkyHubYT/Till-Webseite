@@ -32,3 +32,9 @@ services:
         sync: false
       - key: SESSION_SECRET
         generateValue: true
+      - key: PAYMENT_ENABLED
+        value: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
