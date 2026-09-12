@@ -5,4 +5,5 @@ node_modules/
 admin-user.json
 data/admin-user.json
 *.log
+*.zip
 .DS_Store
