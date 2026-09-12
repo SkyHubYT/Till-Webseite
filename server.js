@@ -14,6 +14,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 const IS_PROD = process.env.NODE_ENV === 'production';
+const PAYMENT_ENABLED = String(process.env.PAYMENT_ENABLED || 'false') === 'true';
 
 const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
@@ -33,9 +34,23 @@ const DEFAULT_SETTINGS = {
 };
 
 app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
 app.use(helmet({
-  contentSecurityPolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      frameAncestors: ["'none'"]
+    }
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
 app.use(express.json({ limit: '50kb' }));
@@ -46,6 +61,7 @@ if (!process.env.SESSION_SECRET) {
 }
 
 app.use(session({
+  name: 'till.sid',
   secret: process.env.SESSION_SECRET || 'development-only-change-me',
   resave: false,
   saveUninitialized: false,
@@ -71,6 +87,14 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Zu viele Login-Versuche. Bitte versuche es später erneut.' }
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 12,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Zahlungsanfragen. Bitte versuche es später erneut.' }
 });
 
 function clean(v, max) {
@@ -143,12 +167,19 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+function getBaseUrl(req) {
+  const configured = clean(process.env.PUBLIC_BASE_URL, 500);
+  if (configured && /^https?:\/\//i.test(configured)) return configured.replace(/\/$/, '');
+  return `${req.protocol}://${req.get('host')}`;
+}
+
 // Clean URLs
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/kontakt', (req, res) => res.sendFile(path.join(__dirname, 'kontakt.html')));
 app.get('/projekte', (req, res) => res.sendFile(path.join(__dirname, 'projekte.html')));
 app.get('/unterstuetzen', (req, res) => res.sendFile(path.join(__dirname, 'shop.html')));
 app.get('/impressum', (req, res) => res.sendFile(path.join(__dirname, 'impressum.html')));
+app.get('/zahlung-erfolgreich', (req, res) => res.sendFile(path.join(__dirname, 'payment-success.html')));
 
 // Public settings
 app.get('/api/settings', (req, res) => {
@@ -160,6 +191,69 @@ app.get('/api/settings', (req, res) => {
     supportAmounts: s.supportAmounts,
     heroText: s.heroText
   });
+});
+
+// Payment readiness - no secret is ever returned to the browser.
+app.get('/api/payment/status', (req, res) => {
+  res.json({
+    enabled: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY),
+    provider: 'stripe',
+    currency: 'CHF'
+  });
+});
+
+// Creates a Stripe-hosted Checkout session. Card/payment details never pass through this server.
+app.post('/api/payment/create-checkout-session', paymentLimiter, async (req, res) => {
+  if (!PAYMENT_ENABLED || !process.env.STRIPE_SECRET_KEY) {
+    return res.status(503).json({ error: 'Online-Zahlungen sind noch nicht aktiviert.' });
+  }
+
+  const amount = Number(req.body.amount);
+  const consent = req.body.consent === true;
+
+  if (!consent) {
+    return res.status(400).json({ error: 'Bitte bestätige zuerst die Hinweise zur freiwilligen Unterstützung.' });
+  }
+
+  if (!Number.isFinite(amount) || amount < 1 || amount > 200) {
+    return res.status(400).json({ error: 'Der Unterstützungsbetrag muss zwischen CHF 1 und CHF 200 liegen.' });
+  }
+
+  const unitAmount = Math.round(amount * 100);
+  const baseUrl = getBaseUrl(req);
+  const params = new URLSearchParams();
+  params.set('mode', 'payment');
+  params.set('success_url', `${baseUrl}/zahlung-erfolgreich?session_id={CHECKOUT_SESSION_ID}`);
+  params.set('cancel_url', `${baseUrl}/unterstuetzen?payment=cancelled`);
+  params.set('line_items[0][price_data][currency]', 'chf');
+  params.set('line_items[0][price_data][product_data][name]', 'Freiwillige Projekt-Unterstützung');
+  params.set('line_items[0][price_data][product_data][description]', 'Freiwilliger Beitrag ohne Anspruch auf Ware oder Dienstleistung.');
+  params.set('line_items[0][price_data][unit_amount]', String(unitAmount));
+  params.set('line_items[0][quantity]', '1');
+  params.set('metadata[purpose]', 'project_support');
+
+  try {
+    const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    });
+
+    const data = await stripeResponse.json();
+
+    if (!stripeResponse.ok || !data.url) {
+      console.error('Stripe checkout error:', data?.error?.message || stripeResponse.status);
+      return res.status(502).json({ error: 'Die Zahlungsseite konnte gerade nicht erstellt werden.' });
+    }
+
+    res.json({ url: data.url });
+  } catch (err) {
+    console.error('Payment error:', err.message);
+    res.status(502).json({ error: 'Der Zahlungsanbieter ist gerade nicht erreichbar.' });
+  }
 });
 
 // Contact form
@@ -191,15 +285,7 @@ app.post('/api/contact', contactLimiter, async (req, res) => {
       replyTo: email,
       subject: `[Website] ${subject}`,
       text:
-`Neue Kontaktanfrage über die Webseite
-
-Name: ${name}
-E-Mail: ${email}
-Betreff: ${subject}
-
-Nachricht:
-${message}
-`,
+`Neue Kontaktanfrage über die Webseite\n\nName: ${name}\nE-Mail: ${email}\nBetreff: ${subject}\n\nNachricht:\n${message}\n`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:680px;margin:auto">
           <h2>Neue Kontaktanfrage über deine Webseite</h2>
@@ -236,16 +322,23 @@ app.post('/api/admin/login', loginLimiter, async (req, res) => {
     return res.status(401).json({ error: 'Benutzername oder Passwort falsch.' });
   }
 
-  req.session.admin = true;
-  req.session.adminUser = admin.username;
-  res.json({ ok: true });
+  req.session.regenerate(err => {
+    if (err) return res.status(500).json({ error: 'Login konnte nicht abgeschlossen werden.' });
+    req.session.admin = true;
+    req.session.adminUser = admin.username;
+    res.json({ ok: true });
+  });
 });
 
 app.post('/api/admin/logout', requireAdmin, (req, res) => {
-  req.session.destroy(() => res.json({ ok: true }));
+  req.session.destroy(() => {
+    res.clearCookie('till.sid');
+    res.json({ ok: true });
+  });
 });
 
 app.get('/api/admin/me', (req, res) => {
+  res.set('Cache-Control', 'no-store');
   res.json({
     authenticated: req.session?.admin === true,
     username: req.session?.adminUser || null
@@ -253,6 +346,7 @@ app.get('/api/admin/me', (req, res) => {
 });
 
 app.get('/api/admin/settings', requireAdmin, (req, res) => {
+  res.set('Cache-Control', 'no-store');
   res.json({ settings: getSettings() });
 });
 
@@ -271,7 +365,7 @@ app.put('/api/admin/settings', requireAdmin, (req, res) => {
     !youtubeUrl ||
     !validEmail(contactEmail) ||
     amounts.length !== 3 ||
-    amounts.some(v => !Number.isFinite(v) || v < 1 || v > 10000)
+    amounts.some(v => !Number.isFinite(v) || v < 1 || v > 200)
   ) {
     return res.status(400).json({ error: 'Ungültige Einstellungen.' });
   }
@@ -292,9 +386,9 @@ app.put('/api/admin/password', requireAdmin, async (req, res) => {
   const currentPassword = String(req.body.currentPassword || '');
   const newPassword = String(req.body.newPassword || '');
 
-  if (newPassword.length < 8) {
+  if (newPassword.length < 12) {
     return res.status(400).json({
-      error: 'Das neue Passwort muss mindestens 8 Zeichen haben.'
+      error: 'Das neue Passwort muss mindestens 12 Zeichen haben.'
     });
   }
 
@@ -311,16 +405,29 @@ app.put('/api/admin/password', requireAdmin, async (req, res) => {
   admin.passwordHash = await bcrypt.hash(newPassword, 12);
   writeJson(ADMIN_FILE, admin);
 
-  res.json({ ok: true });
+  req.session.regenerate(() => {
+    req.session.admin = true;
+    req.session.adminUser = admin.username;
+    res.json({ ok: true });
+  });
 });
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ ok: true, env: IS_PROD ? 'production' : 'development' });
+  res.status(200).json({
+    ok: true,
+    env: IS_PROD ? 'production' : 'development',
+    payments: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY)
+  });
 });
 
 app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
-  maxAge: IS_PROD ? '1h' : 0
+  maxAge: IS_PROD ? '1h' : 0,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('admin.html') || filePath.endsWith('admin.js')) {
+      res.setHeader('Cache-Control', 'no-store');
+    }
+  }
 }));
 
 app.use((req, res) => {
@@ -338,6 +445,7 @@ Promise.resolve()
       console.log(`Till Website läuft auf ${HOST}:${PORT}`);
       console.log(`Modus: ${IS_PROD ? 'production' : 'development'}`);
       console.log(`Datenordner: ${DATA_DIR}`);
+      console.log(`Online-Zahlungen: ${PAYMENT_ENABLED && process.env.STRIPE_SECRET_KEY ? 'aktiv' : 'deaktiviert/vorbereitet'}`);
     });
   })
   .catch(err => {
