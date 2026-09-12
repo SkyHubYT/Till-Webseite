@@ -8,119 +8,122 @@
 - Projekt-Hub
 - Freiwillige Unterstützung statt klassischem Shop
 - Kontaktformular mit direktem E-Mail-Versand
+- Kontakt über Resend HTTPS auf Render Free
+- Gmail SMTP als optionaler Fallback
 - Geschützter Admin-Login
-- Admin-Einstellungen
-- Admin-Passwortänderung
+- Admin-Einstellungen und Passwortänderung
 - bcrypt Passwort-Hash
 - Server-Sessions
 - Login-, Kontakt- und Zahlungs-Rate-Limiting
 - Helmet Security Headers mit Content Security Policy
 - Clean URLs (`/kontakt`, `/admin`, `/projekte`, `/unterstuetzen`)
-- Vorbereitete Stripe-Checkout-Anbindung
-- Zahlungsdaten werden nicht auf dem eigenen Server eingegeben
+- Stripe Checkout für freiwillige Unterstützung
+- Serverseitige Prüfung des Stripe-Zahlungsstatus
+- Zahlungsdaten werden nicht auf dem eigenen Server eingegeben oder gespeichert
 - Docker-Unterstützung
 - Render Blueprint
 - Health Check unter `/health`
+
+## Render: notwendige Environment Variables
+
+### Basis
+
+```text
+CONTACT_TO=deine-kontaktadresse@example.com
+ADMIN_PASSWORD=DEIN_SICHERES_ADMIN_PASSWORT
+PUBLIC_BASE_URL=https://DEINE-SEITE.onrender.com
+```
+
+`SESSION_SECRET` kann durch die Blueprint-Konfiguration automatisch erzeugt werden.
+
+### Kontakt – empfohlen auf Render Free
+
+Render Free kann klassische SMTP-Verbindungen einschränken. Deshalb unterstützt die Webseite jetzt Resend über HTTPS.
+
+Bei Render setzen:
+
+```text
+RESEND_API_KEY=DEIN_RESEND_API_KEY
+RESEND_FROM=Till Website <deine-verifizierte-absenderadresse@deinedomain.ch>
+CONTACT_TO=deine-kontaktadresse@example.com
+```
+
+Für erste Tests kann je nach Resend-Konto auch ein von Resend bereitgestellter Test-Absender verwendet werden. Für öffentlichen Betrieb sollte eine erlaubte/verifizierte Absenderadresse eingerichtet werden.
+
+Optional bleibt Gmail SMTP als Fallback verfügbar:
+
+```text
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=deine-gmail-adresse@gmail.com
+SMTP_PASS=DEIN_GOOGLE_APP_PASSWORT
+SMTP_FROM=deine-gmail-adresse@gmail.com
+```
+
+### Stripe Checkout
+
+Die Render-Konfiguration setzt `PAYMENT_ENABLED=true`. Eine Zahlung wird trotzdem nur angeboten, wenn zusätzlich ein gültiger `STRIPE_SECRET_KEY` vorhanden ist.
+
+```text
+STRIPE_SECRET_KEY=sk_test_...   # zuerst Testmodus
+PUBLIC_BASE_URL=https://DEINE-SEITE.onrender.com
+```
+
+Im Testmodus werden keine echten Beträge belastet. Vor einem Live-Betrieb müssen das Stripe-Konto, die rechtlichen Angaben und die Berechtigung des Kontoinhabers geklärt sein. Bei minderjährigen Betreibern sollte das Zahlungsanbieter-Konto und die vertragliche Verantwortung über eine erziehungsberechtigte Person laufen.
+
+Ablauf:
+
+1. Besucher wählt CHF 1–200.
+2. Hinweise zur freiwilligen Unterstützung werden bestätigt.
+3. Der Server erstellt eine Stripe-Checkout-Session.
+4. Der Besucher wird auf die Stripe-Zahlungsseite weitergeleitet.
+5. Nach Rückkehr prüft der Server die Checkout-Session direkt bei Stripe.
+6. Karteninformationen werden niemals auf diesem Server verarbeitet.
+
+## Kontakt prüfen
+
+`/health` zeigt unter anderem, ob Kontakt und Zahlungen serverseitig eingerichtet sind.
+
+Beispiel:
+
+```json
+{
+  "ok": true,
+  "contact": true,
+  "payments": true
+}
+```
 
 ## Lokal starten
 
 1. `.env.example` zu `.env` kopieren.
 2. Eigene Werte eintragen.
-3. Abhängigkeiten installieren und Server starten:
+3. Dann:
 
 ```bash
 npm install
 npm start
 ```
 
-Webseite:
-`http://localhost:3000`
+Webseite: `http://localhost:3000`
 
-Admin:
-`http://localhost:3000/admin`
-
-## Kostenlos auf Render deployen
-
-Die vorhandene `render.yaml` ist auf den Render-Free-Web-Service eingestellt.
-
-1. Repository mit Render verbinden.
-2. `New` → `Blueprint` auswählen.
-3. Dieses Repository auswählen.
-4. Folgende geheimen Environment-Variablen bei Render eintragen:
-   - `CONTACT_TO`
-   - `SMTP_USER`
-   - `SMTP_PASS`
-   - `SMTP_FROM`
-   - `ADMIN_PASSWORD`
-5. `SESSION_SECRET` wird durch die Blueprint-Konfiguration automatisch erzeugt.
-
-### Hinweis zum Free-Tarif
-
-Der kostenlose Render-Service besitzt keinen persistenten Datenträger. Änderungen an Einstellungen oder am Admin-Passwort, die nur auf dem Server gespeichert werden, können bei einem neuen Deployment oder einer neuen Instanz zurückgesetzt werden. Das ursprüngliche Admin-Passwort kommt aus `ADMIN_PASSWORD` bei Render.
-
-Für dauerhaft gespeicherte Admin-Einstellungen sollte später eine Datenbank oder ein persistenter Tarif verwendet werden.
-
-## Online-Zahlungen vorbereiten
-
-Die Zahlungsfunktion ist absichtlich standardmässig deaktiviert.
-
-Benötigte Render-Variablen:
-
-```text
-PAYMENT_ENABLED=false
-STRIPE_SECRET_KEY=dein_geheimer_stripe_key
-PUBLIC_BASE_URL=https://deine-oeffentliche-domain.example
-```
-
-Erst wenn ein korrekt eingerichtetes Zahlungskonto vorhanden ist und die rechtlichen/vertraglichen Voraussetzungen geklärt sind, kann `PAYMENT_ENABLED=true` gesetzt werden.
-
-Ablauf:
-
-1. Besucher wählt einen freiwilligen Betrag zwischen CHF 1 und CHF 200.
-2. Besucher bestätigt die Hinweise zur freiwilligen Unterstützung und zum Datenschutz.
-3. Der Server erstellt eine gehostete Checkout-Session beim Zahlungsanbieter.
-4. Der Besucher wird auf die geschützte Zahlungsseite des Anbieters weitergeleitet.
-5. Karten- oder andere Zahlungsdaten werden nicht auf diesem Webseiten-Server eingegeben oder gespeichert.
-
-Die Unterstützung ist kein Kauf einer Ware oder Dienstleistung und wird nicht als steuerbegünstigte Spende bezeichnet.
-
-Wenn der Betreiber minderjährig ist, müssen vor Aktivierung insbesondere die Bedingungen des Zahlungsanbieters sowie die Zustimmung/Verantwortung der Eltern oder Erziehungsberechtigten geklärt werden.
+Admin: `http://localhost:3000/admin`
 
 ## Datenschutz
 
-Die öffentliche Datenschutzerklärung unter `/impressum#datenschutz` enthält nun Hinweise zu:
-
-- Hosting und technischen Serverdaten
-- Kontaktformular und E-Mail-Weiterleitung
-- Admin-Session-Cookie
-- freiwilliger Unterstützung und Zahlungsanbieter
-- Minderjährigen
-- Datensicherheit
-- Kontakt für Datenschutzanliegen
-
-Die Texte sind eine technische Vorlage und keine Rechtsberatung. Vor dauerhaftem öffentlichen Betrieb mit aktivierten Zahlungen sollten Pflichtangaben und Datenschutzangaben für die tatsächliche Situation geprüft werden.
-
-## Gmail / Kontaktformular
-
-Für `SMTP_PASS` niemals das normale Google-Passwort verwenden. Nutze ein separates Google-App-Passwort.
-
-Je nach Hosting-Tarif können SMTP-Verbindungen eingeschränkt sein. Wenn SMTP auf dem verwendeten Hoster blockiert wird, sollte das Kontaktformular später auf einen HTTP-basierten Mail-Anbieter umgestellt werden.
+Die Datenschutzerklärung unter `/impressum#datenschutz` beschreibt Hosting, Kontaktformular, E-Mail-Versand, Admin-Session-Cookie und Stripe-Zahlungsabwicklung. Sie ist eine technische Vorlage und keine Rechtsberatung.
 
 ## Sicherheit
 
-- `.env` niemals committen oder auf GitHub hochladen.
-- Geheimnisse nur als Render Environment Variables speichern.
-- Bereits veröffentlichte Passwörter und Secrets sofort ersetzen.
-- `ADMIN_PASSWORD`, `SESSION_SECRET`, `SMTP_PASS` und `STRIPE_SECRET_KEY` geheim halten.
-- Online nur über HTTPS verwenden.
+- `.env` niemals committen.
+- Secrets nur bei Render als Environment Variables speichern.
+- `ADMIN_PASSWORD`, `SESSION_SECRET`, `RESEND_API_KEY`, `SMTP_PASS` und `STRIPE_SECRET_KEY` geheim halten.
+- Bereits veröffentlichte Secrets sofort ersetzen.
+- Nur HTTPS im öffentlichen Betrieb verwenden.
 - `admin-user.json` nicht committen.
-- Die `.env.example`-Dateien dürfen ausschliesslich Platzhalter enthalten.
-- Zahlungsfunktion standardmässig mit `PAYMENT_ENABLED=false` deaktiviert lassen.
+- Beispiel-Dateien dürfen nur Platzhalter enthalten.
 
-### Sehr wichtig
+## Render Free
 
-In älteren Repository-Versionen waren versehentlich echte Zugangsdaten in Beispiel-Dateien enthalten. Diese wurden aus der aktuellen Version entfernt. Die betroffenen Gmail-App-Passwörter, Admin-Passwörter und Session-Secrets sollten trotzdem ersetzt werden, weil Git-Historie ältere Versionen weiterhin enthalten kann.
-
-## Eigene Domain
-
-Nach erfolgreichem Deployment kann eine eigene Domain wie `tillgaming.ch` mit dem Render-Web-Service verbunden werden. Die nötigen DNS-Einträge zeigt Render im Domain-Bereich an.
+Der kostenlose Render-Service besitzt keinen persistenten Datenträger. Einstellungen oder geänderte Admin-Passwörter, die nur lokal auf der Instanz gespeichert werden, können bei einem neuen Deployment zurückgesetzt werden. Für dauerhaft gespeicherte Admin-Daten sollte später eine Datenbank oder persistenter Speicher verwendet werden.
