@@ -13,9 +13,11 @@
 - Admin-Passwortänderung
 - bcrypt Passwort-Hash
 - Server-Sessions
-- Login- und Kontakt-Rate-Limiting
-- Helmet Security Headers
+- Login-, Kontakt- und Zahlungs-Rate-Limiting
+- Helmet Security Headers mit Content Security Policy
 - Clean URLs (`/kontakt`, `/admin`, `/projekte`, `/unterstuetzen`)
+- Vorbereitete Stripe-Checkout-Anbindung
+- Zahlungsdaten werden nicht auf dem eigenen Server eingegeben
 - Docker-Unterstützung
 - Render Blueprint
 - Health Check unter `/health`
@@ -58,6 +60,46 @@ Der kostenlose Render-Service besitzt keinen persistenten Datenträger. Änderun
 
 Für dauerhaft gespeicherte Admin-Einstellungen sollte später eine Datenbank oder ein persistenter Tarif verwendet werden.
 
+## Online-Zahlungen vorbereiten
+
+Die Zahlungsfunktion ist absichtlich standardmässig deaktiviert.
+
+Benötigte Render-Variablen:
+
+```text
+PAYMENT_ENABLED=false
+STRIPE_SECRET_KEY=dein_geheimer_stripe_key
+PUBLIC_BASE_URL=https://deine-oeffentliche-domain.example
+```
+
+Erst wenn ein korrekt eingerichtetes Zahlungskonto vorhanden ist und die rechtlichen/vertraglichen Voraussetzungen geklärt sind, kann `PAYMENT_ENABLED=true` gesetzt werden.
+
+Ablauf:
+
+1. Besucher wählt einen freiwilligen Betrag zwischen CHF 1 und CHF 200.
+2. Besucher bestätigt die Hinweise zur freiwilligen Unterstützung und zum Datenschutz.
+3. Der Server erstellt eine gehostete Checkout-Session beim Zahlungsanbieter.
+4. Der Besucher wird auf die geschützte Zahlungsseite des Anbieters weitergeleitet.
+5. Karten- oder andere Zahlungsdaten werden nicht auf diesem Webseiten-Server eingegeben oder gespeichert.
+
+Die Unterstützung ist kein Kauf einer Ware oder Dienstleistung und wird nicht als steuerbegünstigte Spende bezeichnet.
+
+Wenn der Betreiber minderjährig ist, müssen vor Aktivierung insbesondere die Bedingungen des Zahlungsanbieters sowie die Zustimmung/Verantwortung der Eltern oder Erziehungsberechtigten geklärt werden.
+
+## Datenschutz
+
+Die öffentliche Datenschutzerklärung unter `/impressum#datenschutz` enthält nun Hinweise zu:
+
+- Hosting und technischen Serverdaten
+- Kontaktformular und E-Mail-Weiterleitung
+- Admin-Session-Cookie
+- freiwilliger Unterstützung und Zahlungsanbieter
+- Minderjährigen
+- Datensicherheit
+- Kontakt für Datenschutzanliegen
+
+Die Texte sind eine technische Vorlage und keine Rechtsberatung. Vor dauerhaftem öffentlichen Betrieb mit aktivierten Zahlungen sollten Pflichtangaben und Datenschutzangaben für die tatsächliche Situation geprüft werden.
+
 ## Gmail / Kontaktformular
 
 Für `SMTP_PASS` niemals das normale Google-Passwort verwenden. Nutze ein separates Google-App-Passwort.
@@ -69,10 +111,15 @@ Je nach Hosting-Tarif können SMTP-Verbindungen eingeschränkt sein. Wenn SMTP a
 - `.env` niemals committen oder auf GitHub hochladen.
 - Geheimnisse nur als Render Environment Variables speichern.
 - Bereits veröffentlichte Passwörter und Secrets sofort ersetzen.
-- `ADMIN_PASSWORD`, `SESSION_SECRET` und `SMTP_PASS` geheim halten.
+- `ADMIN_PASSWORD`, `SESSION_SECRET`, `SMTP_PASS` und `STRIPE_SECRET_KEY` geheim halten.
 - Online nur über HTTPS verwenden.
 - `admin-user.json` nicht committen.
-- Das Repository enthält nur `.env.example`-Dateien mit Platzhaltern.
+- Die `.env.example`-Dateien dürfen ausschliesslich Platzhalter enthalten.
+- Zahlungsfunktion standardmässig mit `PAYMENT_ENABLED=false` deaktiviert lassen.
+
+### Sehr wichtig
+
+In älteren Repository-Versionen waren versehentlich echte Zugangsdaten in Beispiel-Dateien enthalten. Diese wurden aus der aktuellen Version entfernt. Die betroffenen Gmail-App-Passwörter, Admin-Passwörter und Session-Secrets sollten trotzdem ersetzt werden, weil Git-Historie ältere Versionen weiterhin enthalten kann.
 
 ## Eigene Domain
 
