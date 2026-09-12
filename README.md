@@ -1,30 +1,30 @@
 # Till Gaming & Dev – Production Version
 
-Diese Version ist für einen echten öffentlichen Webserver vorbereitet.
+Öffentliche Creator-Webseite für Minecraft, Gaming, Development und freiwillige Projekt-Unterstützung.
 
-## Enthalten
+## Funktionen
 
 - Öffentliche Startseite
-- Projekte
-- Freiwillige Unterstützung
+- Projekt-Hub
+- Freiwillige Unterstützung statt klassischem Shop
 - Kontaktformular mit direktem E-Mail-Versand
-- Admin-Login
+- Geschützter Admin-Login
 - Admin-Einstellungen
-- Passwortänderung
-- Sichere Server-Sessions
-- Rate Limiting
-- Produktionsmodus
-- Clean URLs (`/kontakt`, `/admin`, `/projekte`, ...)
-- Dockerfile
+- Admin-Passwortänderung
+- bcrypt Passwort-Hash
+- Server-Sessions
+- Login- und Kontakt-Rate-Limiting
+- Helmet Security Headers
+- Clean URLs (`/kontakt`, `/admin`, `/projekte`, `/unterstuetzen`)
+- Docker-Unterstützung
 - Render Blueprint
-- Health Check
-- Persistenter Datenordner für Einstellungen und Admin-Hash
+- Health Check unter `/health`
 
 ## Lokal starten
 
 1. `.env.example` zu `.env` kopieren.
 2. Eigene Werte eintragen.
-3. Dann:
+3. Abhängigkeiten installieren und Server starten:
 
 ```bash
 npm install
@@ -37,49 +37,43 @@ Webseite:
 Admin:
 `http://localhost:3000/admin`
 
-## Öffentlich online stellen
+## Kostenlos auf Render deployen
 
-### Variante: Render
+Die vorhandene `render.yaml` ist auf den Render-Free-Web-Service eingestellt.
 
-Die Dateien in ein GitHub-Repository hochladen.
+1. Repository mit Render verbinden.
+2. `New` → `Blueprint` auswählen.
+3. Dieses Repository auswählen.
+4. Folgende geheimen Environment-Variablen bei Render eintragen:
+   - `CONTACT_TO`
+   - `SMTP_USER`
+   - `SMTP_PASS`
+   - `SMTP_FROM`
+   - `ADMIN_PASSWORD`
+5. `SESSION_SECRET` wird durch die Blueprint-Konfiguration automatisch erzeugt.
 
-Danach auf Render:
-- New
-- Blueprint
-- GitHub Repository auswählen
-- `render.yaml` wird erkannt
+### Hinweis zum Free-Tarif
 
-Anschliessend die geheimen Environment-Variablen eintragen:
-- CONTACT_TO
-- SMTP_USER
-- SMTP_PASS
-- SMTP_FROM
-- ADMIN_PASSWORD
+Der kostenlose Render-Service besitzt keinen persistenten Datenträger. Änderungen an Einstellungen oder am Admin-Passwort, die nur auf dem Server gespeichert werden, können bei einem neuen Deployment oder einer neuen Instanz zurückgesetzt werden. Das ursprüngliche Admin-Passwort kommt aus `ADMIN_PASSWORD` bei Render.
 
-`SESSION_SECRET` kann Render automatisch erzeugen.
+Für dauerhaft gespeicherte Admin-Einstellungen sollte später eine Datenbank oder ein persistenter Tarif verwendet werden.
 
-Der Datenordner `/data` wird als persistenter Datenträger verwendet. Dadurch bleiben Admin-Passwortänderungen und Einstellungen auch nach einem Neustart erhalten.
+## Gmail / Kontaktformular
 
-## Gmail
+Für `SMTP_PASS` niemals das normale Google-Passwort verwenden. Nutze ein separates Google-App-Passwort.
 
-Für `SMTP_PASS` ein Google-App-Passwort verwenden, nicht das normale Google-Passwort.
-
-## Eigene Domain
-
-Nach dem Deployment kannst du beim Hosting-Anbieter eine eigene Domain verbinden, z.B.:
-
-`www.dein-kanal.ch`
-
-oder
-
-`tillgaming.ch`
-
-Dafür brauchst du eine registrierte Domain und setzt beim Domain-Anbieter die DNS-Einträge, die dein Hosting-Anbieter anzeigt.
+Je nach Hosting-Tarif können SMTP-Verbindungen eingeschränkt sein. Wenn SMTP auf dem verwendeten Hoster blockiert wird, sollte das Kontaktformular später auf einen HTTP-basierten Mail-Anbieter umgestellt werden.
 
 ## Sicherheit
 
-- `.env` niemals in GitHub hochladen.
-- ADMIN_PASSWORD und SESSION_SECRET nicht öffentlich teilen.
-- SMTP_PASS geheim halten.
-- Online immer HTTPS verwenden.
-- `admin-user.json` wird im persistenten Datenordner gespeichert und nicht ins Repository gelegt.
+- `.env` niemals committen oder auf GitHub hochladen.
+- Geheimnisse nur als Render Environment Variables speichern.
+- Bereits veröffentlichte Passwörter und Secrets sofort ersetzen.
+- `ADMIN_PASSWORD`, `SESSION_SECRET` und `SMTP_PASS` geheim halten.
+- Online nur über HTTPS verwenden.
+- `admin-user.json` nicht committen.
+- Das Repository enthält nur `.env.example`-Dateien mit Platzhaltern.
+
+## Eigene Domain
+
+Nach erfolgreichem Deployment kann eine eigene Domain wie `tillgaming.ch` mit dem Render-Web-Service verbunden werden. Die nötigen DNS-Einträge zeigt Render im Domain-Bereich an.
