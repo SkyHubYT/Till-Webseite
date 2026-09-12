@@ -33,6 +33,23 @@ $$('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
 
 const menuToggle = $('.menu-toggle');
 const nav = $('.main-nav');
+
+// Über mich und Team auf allen Seiten automatisch in die Haupt-/Hamburger-Navigation einfügen.
+if(nav){
+  const ensureNavLink = (href, label, navKey) => {
+    if(nav.querySelector(`a[href="${href}"]`)) return;
+    const link = document.createElement('a');
+    link.href = href;
+    link.textContent = label;
+    link.dataset.nav = navKey;
+    const supportLink = nav.querySelector('a[href="/unterstuetzen"]');
+    if(supportLink) nav.insertBefore(link, supportLink);
+    else nav.appendChild(link);
+  };
+  ensureNavLink('/ueber-mich', 'Über mich', 'about');
+  ensureNavLink('/team', 'Team', 'team');
+}
+
 if(menuToggle && nav){
   menuToggle.addEventListener('click', () => {
     const open = nav.classList.toggle('open');
@@ -73,7 +90,7 @@ if(projectButtons.length){
   }
   projectButtons.forEach(btn=>btn.addEventListener('click',()=>applyProjectFilter(btn.dataset.filter)));
   const param = new URLSearchParams(location.search).get('filter');
-  if(param && ['minecraft','gaming','dev','youtube'].includes(param)) applyProjectFilter(param);
+  if(param && ['minecraft','gaming','dev','youtube','engagement'].includes(param)) applyProjectFilter(param);
 }
 
 let paymentsEnabled = false;
