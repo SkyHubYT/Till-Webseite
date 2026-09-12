@@ -2,7 +2,7 @@ services:
   - type: web
     name: till-gaming-dev
     runtime: docker
-    plan: starter
+    plan: free
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -12,8 +12,6 @@ services:
         value: 3000
       - key: HOST
         value: 0.0.0.0
-      - key: DATA_DIR
-        value: /data
       - key: CONTACT_TO
         sync: false
       - key: SMTP_HOST
@@ -34,7 +32,3 @@ services:
         sync: false
       - key: SESSION_SECRET
         generateValue: true
-    disk:
-      name: till-data
-      mountPath: /data
-      sizeGB: 1
