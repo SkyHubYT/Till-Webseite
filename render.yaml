@@ -13,7 +13,7 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: CONTACT_TO
-        sync: false
+        value: Tillscheidegget@gmail.com
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM
