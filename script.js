@@ -1,5 +1,15 @@
 const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
 
+// Global 2026 design layer
+(() => {
+  if(!document.querySelector('link[href^="/design-2026.css"]')){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='/design-2026.css?v=20260912-1';
+    document.head.appendChild(link);
+  }
+})();
+
 function normalizeYoutubeUrl(url){
   const value = String(url || '').trim();
   if(!value || /^https?:\/\/(www\.)?youtube\.com\/?$/i.test(value)) return DEFAULT_YOUTUBE_URL;
@@ -75,6 +85,44 @@ if(page) {
   if(active) active.classList.add('active');
 }
 
+// Header scroll state, reveal animations and subtle cursor glow.
+const header=$('.site-header');
+const syncHeader=()=>header?.classList.toggle('is-scrolled',window.scrollY>18);
+syncHeader();
+window.addEventListener('scroll',syncHeader,{passive:true});
+
+const revealTargets=$$('.section > *, .page-hero > *, .hero-copy > *, .hero-visual, .project-card, .support-card, .contact-card, .faq details');
+revealTargets.forEach((el,i)=>{
+  el.classList.add('reveal-ready');
+  el.dataset.revealDelay=String(i%5);
+});
+if('IntersectionObserver' in window){
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('reveal-in');
+        observer.unobserve(entry.target);
+      }
+    });
+  },{threshold:.08,rootMargin:'0px 0px -35px 0px'});
+  revealTargets.forEach(el=>observer.observe(el));
+}else revealTargets.forEach(el=>el.classList.add('reveal-in'));
+
+if(matchMedia('(pointer:fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const glow=document.createElement('div');
+  glow.className='cursor-glow';
+  document.body.appendChild(glow);
+  let tx=innerWidth/2,ty=innerHeight/2,cx=tx,cy=ty;
+  addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;glow.style.opacity='1';},{passive:true});
+  addEventListener('mouseout',e=>{if(!e.relatedTarget) glow.style.opacity='0';});
+  const follow=()=>{
+    cx+=(tx-cx)*.1;cy+=(ty-cy)*.1;
+    glow.style.transform=`translate(${cx-180}px,${cy-180}px)`;
+    requestAnimationFrame(follow);
+  };
+  follow();
+}
+
 let toastTimer;
 function toast(message){
   const el = $('#toast');
@@ -113,7 +161,7 @@ async function loadPaymentStatus(){
     const data = await res.json();
     paymentsEnabled = Boolean(data.enabled);
     statusEl.textContent = paymentsEnabled
-      ? 'Sichere Online-Zahlung ist aktiv. Du wirst für die Zahlung zu Stripe weitergeleitet.'
+      ? `Sichere Online-Zahlung ist aktiv${Array.isArray(data.methods)&&data.methods.includes('twint') ? ' – Karte und TWINT werden über Stripe angeboten.' : '. Du wirst für die Zahlung zu Stripe weitergeleitet.'}`
       : 'Online-Zahlungen sind noch nicht vollständig eingerichtet. Es wird aktuell kein Geld übertragen.';
   }catch{
     paymentsEnabled = false;
