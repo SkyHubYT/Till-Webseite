@@ -14,6 +14,10 @@ services:
         value: 0.0.0.0
       - key: CONTACT_TO
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
@@ -33,7 +37,7 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: PAYMENT_ENABLED
-        value: false
+        value: true
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: PUBLIC_BASE_URL
