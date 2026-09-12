@@ -1,0 +1,28 @@
+/* Politics & EVP page */
+.politics-hero{background:radial-gradient(circle at 82% 18%,rgba(255,221,0,.16),transparent 27rem),radial-gradient(circle at 18% 88%,rgba(18,80,160,.13),transparent 25rem),#0b1017!important}
+.politics-hero .eyebrow{color:#ffd900}
+.politics-hero .eyebrow::before{background:#ffd900;box-shadow:0 0 18px rgba(255,217,0,.55)}
+.politics-profile-grid{display:grid;grid-template-columns:minmax(290px,430px) minmax(0,1fr);gap:24px;align-items:stretch}
+.politics-photo-card{background:#f5f5f2!important;border-color:rgba(255,217,0,.28)!important}
+.politics-photo-card img{display:block;width:100%;height:100%;min-height:520px;object-fit:contain;background:#fff}
+.politics-story{min-height:520px;background:radial-gradient(circle at 90% 10%,rgba(255,217,0,.18),transparent 32%),linear-gradient(145deg,#102f45,#111923 62%)!important}
+.politics-story .pill{border-color:rgba(255,217,0,.32);color:#ffe969}
+.politics-note{margin-top:18px;padding:14px 16px;border-left:3px solid #ffd900;background:rgba(255,217,0,.06);border-radius:0 12px 12px 0;color:#cbd5e1!important;font-size:.9rem}
+.politics-grid{grid-template-columns:repeat(2,1fr)!important}
+.politics-actions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.politics-actions-grid .project-card{height:100%}
+.politics-actions-grid .project-content{display:flex;flex-direction:column;align-items:flex-start;height:100%}
+.politics-actions-grid .project-content p:last-child{margin-top:auto;padding-top:18px}
+body[data-page="politics"] .project-card:hover{border-color:rgba(255,217,0,.3)!important;box-shadow:0 28px 80px rgba(0,0,0,.28),0 0 35px rgba(255,217,0,.06)}
+body[data-page="politics"] .project-card::after{background:linear-gradient(90deg,transparent,#ffd900,#0b57a4,transparent)}
+body[data-page="politics"] .tech-tags span{border-color:rgba(255,217,0,.1)}
+
+@media(max-width:900px){
+  .politics-profile-grid{grid-template-columns:1fr}
+  .politics-photo-card img{min-height:0;max-height:720px}
+  .politics-actions-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  .politics-grid,.politics-actions-grid{grid-template-columns:1fr!important}
+  .politics-photo-card img{max-height:none}
+}
