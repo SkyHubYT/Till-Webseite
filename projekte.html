@@ -17,6 +17,8 @@
   <button class="menu-toggle" aria-label="Navigation öffnen" aria-expanded="false">☰</button>
   <nav class="main-nav">
     <a data-nav="home" href="/">Home</a>
+    <a data-nav="about" href="/ueber-mich">Über mich</a>
+    <a data-nav="team" href="/team">Team</a>
     <a data-nav="projects" href="/projekte">Projekte</a>
     <a data-nav="support" href="/unterstuetzen">Unterstützen</a>
     <a data-nav="contact" href="/kontakt">Kontakt</a>
@@ -63,14 +65,16 @@
       <div class="project-thumb thumb-red"><span>▶</span></div>
       <div class="project-content"><div class="project-meta"><span class="pill">YouTube</span><span class="status active">Aktiv</span></div>
       <h3>YouTube</h3><p>Videos, Shorts, Gaming-Content und Updates zum Leitstellen Manager.</p>
-      <div class="tech-tags"><span>Videos</span><span>Shorts</span><span>Editing</span></div></div>
+      <div class="tech-tags"><span>Videos</span><span>Shorts</span><span>Editing</span></div>
+      <p style="margin-top:18px"><a class="btn btn-primary" data-youtube-link href="https://www.youtube.com/@tills109" target="_blank" rel="noopener noreferrer">YouTube-Kanal öffnen</a></p></div>
     </article>
 
     <article class="project-card" data-category="minecraft">
       <div class="project-thumb thumb-green"><span>VOXEL</span></div>
       <div class="project-content"><div class="project-meta"><span class="pill">Minecraft</span><span class="status">Inaktiv</span></div>
       <h3>VoxelWorld / MLGRush</h3><p>Früheres Minecraft-Projekt mit Lobby-System, Custom Items und Resourcepack. Aktuell keine aktive Entwicklung.</p>
-      <div class="tech-tags"><span>Paper</span><span>Java</span><span>Archiv</span></div></div>
+      <div class="tech-tags"><span>Paper</span><span>Java</span><span>Archiv</span></div>
+      <p style="margin-top:18px"><a class="btn btn-ghost" href="https://www.youtube.com/@tills109/search?query=VoxelWorld" target="_blank" rel="noopener noreferrer">VoxelWorld-Videos auf YouTube</a></p></div>
     </article>
 
     <article class="project-card" data-category="minecraft">
@@ -100,7 +104,7 @@
 <section class="section section-dark">
   <div class="cta">
     <div><span class="eyebrow">AKTUELLER FOKUS</span><h2>YouTube, Leitstellen Manager & Teilzeit-Lehre.</h2><p>Aktuelle Entwicklung, Content und gesellschaftliches Engagement konzentrieren sich derzeit auf diese drei Bereiche.</p></div>
-    <a class="btn btn-primary" href="/kontakt">Kontakt</a>
+    <div class="hero-actions"><a class="btn btn-primary" data-youtube-link href="https://www.youtube.com/@tills109" target="_blank" rel="noopener noreferrer">YouTube</a><a class="btn btn-ghost" href="/kontakt">Kontakt</a></div>
   </div>
 </section>
 </main>
@@ -116,7 +120,10 @@
     </div>
     <div>
       <h4>Entdecken</h4>
+      <a href="/ueber-mich">Über mich</a>
+      <a href="/team">Team</a>
       <a href="/projekte">Projekte</a>
+      <a data-youtube-link href="https://www.youtube.com/@tills109" target="_blank" rel="noopener noreferrer">YouTube</a>
       <a href="/unterstuetzen">Unterstützen</a>
       <a href="/kontakt">Kontakt</a>
     </div>
@@ -132,4 +139,4 @@
   </div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
-<script src="script.js?v=20260912-petition"></script></body></html>
+<script src="script.js?v=20260912-links"></script></body></html>
