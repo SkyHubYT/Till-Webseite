@@ -1,13 +1,19 @@
 const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
 
-// Global 2026 design layer
+// Global 2026 design + bugfix layers
 (() => {
-  if(!document.querySelector('link[href^="/design-2026.css"]')){
-    const link=document.createElement('link');
-    link.rel='stylesheet';
-    link.href='/design-2026.css?v=20260912-1';
-    document.head.appendChild(link);
-  }
+  const styles = [
+    ['/design-2026.css', '/design-2026.css?v=20260912-1'],
+    ['/bugfix-2026.css', '/bugfix-2026.css?v=20260912-1']
+  ];
+  styles.forEach(([prefix, href]) => {
+    if(!document.querySelector(`link[href^="${prefix}"]`)){
+      const link=document.createElement('link');
+      link.rel='stylesheet';
+      link.href=href;
+      document.head.appendChild(link);
+    }
+  });
 })();
 
 function normalizeYoutubeUrl(url){
@@ -64,6 +70,7 @@ if(nav){
     ['home', '/', 'Home'],
     ['about', '/ueber-mich', 'Über mich'],
     ['team', '/team', 'Team'],
+    ['politics', '/politik', 'Politik & EVP'],
     ['projects', '/projekte', 'Projekte'],
     ['support', '/unterstuetzen', 'Unterstützen'],
     ['contact', '/kontakt', 'Kontakt']
@@ -71,12 +78,18 @@ if(nav){
   nav.innerHTML = navItems.map(([key, href, label]) => `<a data-nav="${key}" href="${href}">${label}</a>`).join('');
 }
 
+function setMenuState(open){
+  if(!menuToggle || !nav) return;
+  nav.classList.toggle('open', open);
+  menuToggle.setAttribute('aria-expanded', String(open));
+  menuToggle.setAttribute('aria-label', open ? 'Navigation schliessen' : 'Navigation öffnen');
+}
+
 if(menuToggle && nav){
-  menuToggle.addEventListener('click', () => {
-    const open = nav.classList.toggle('open');
-    menuToggle.setAttribute('aria-expanded', String(open));
-  });
-  $$('.main-nav a').forEach(a => a.addEventListener('click',()=>nav.classList.remove('open')));
+  menuToggle.addEventListener('click', () => setMenuState(!nav.classList.contains('open')));
+  $$('.main-nav a').forEach(a => a.addEventListener('click',()=>setMenuState(false)));
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') setMenuState(false); });
+  window.addEventListener('resize',()=>{ if(window.innerWidth>1180) setMenuState(false); },{passive:true});
 }
 
 const page = document.body.dataset.page;
