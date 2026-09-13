@@ -1,331 +1,289 @@
 const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-// Global 2026 design + bugfix + clean portal layers
-(() => {
-  const styles = [
-    ['/design-2026.css', '/design-2026.css?v=20260912-1'],
-    ['/bugfix-2026.css', '/bugfix-2026.css?v=20260912-1'],
-    ['/portal-2026.css', '/portal-2026.css?v=20260913-1'],
-    ['/modern-2026.css', '/modern-2026.css?v=20260913-1']
-  ];
-  styles.forEach(([prefix, href]) => {
-    if(!document.querySelector(`link[href^="${prefix}"]`)){
-      const link=document.createElement('link');
-      link.rel='stylesheet';
-      link.href=href;
-      document.head.appendChild(link);
-    }
-  });
-})();
-
-document.body.classList.add('portal-ui');
-
-function normalizeYoutubeUrl(url){
+function normalizeYoutubeUrl(url) {
   const value = String(url || '').trim();
-  if(!value || /^https?:\/\/(www\.)?youtube\.com\/?$/i.test(value)) return DEFAULT_YOUTUBE_URL;
+  if (!value || /^https?:\/\/(www\.)?youtube\.com\/?$/i.test(value)) return DEFAULT_YOUTUBE_URL;
   return value;
 }
 
-async function loadPublicSettings(){
-  try{
-    const res=await fetch('/api/settings');
-    if(!res.ok) return;
-    const s=await res.json();
-    if(s.siteTitle) document.title = document.title.replace('Till Gaming & Dev', s.siteTitle);
-    const heroLead=document.querySelector('.hero .lead');
-    if(heroLead && s.heroText) heroLead.textContent=s.heroText;
+async function loadPublicSettings() {
+  try {
+    const response = await fetch('/api/settings', { cache: 'no-store' });
+    if (!response.ok) return;
+    const settings = await response.json();
 
-    const youtubeUrl = normalizeYoutubeUrl(s.youtubeUrl);
-    document.querySelectorAll('a[data-youtube-link], a[href="https://www.youtube.com/"], a[href="https://youtube.com/"]').forEach(a=>{
-      a.href = youtubeUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+    const youtubeUrl = normalizeYoutubeUrl(settings.youtubeUrl);
+    $$('a[data-youtube-link]').forEach(link => {
+      link.href = youtubeUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
     });
 
-    const mailLinks=[...document.querySelectorAll('a[href^="mailto:"]')];
-    mailLinks.forEach(a=>{
-      if(s.contactEmail){
-        a.href=`mailto:${s.contactEmail}`;
-        if(a.textContent.includes('@')) a.textContent=s.contactEmail;
-      }
-    });
-    const supportButtons=[...document.querySelectorAll('.support-btn[data-support]')];
-    if(Array.isArray(s.supportAmounts)){
-      supportButtons.forEach((btn,i)=>{
-        const amount=s.supportAmounts[i];
-        if(amount){ btn.dataset.support=amount; btn.textContent=`CHF ${amount} unterstützen`; }
+    if (settings.contactEmail) {
+      $$('a[href^="mailto:"]').forEach(link => {
+        link.href = `mailto:${settings.contactEmail}`;
+        if (link.textContent.includes('@')) link.textContent = settings.contactEmail;
       });
     }
-  }catch{}
-}
-loadPublicSettings();
 
-const $ = (s, root=document) => root.querySelector(s);
-const $$ = (s, root=document) => [...root.querySelectorAll(s)];
-
-$$('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
-
-// Eigene schlanke Infoleiste oberhalb der Navigation.
-const siteHeader=$('.site-header');
-if(siteHeader && !$('.till-topbar')){
-  const topbar=document.createElement('div');
-  topbar.className='till-topbar';
-  topbar.innerHTML='<span><strong>TILL</strong> · Gaming · Development · Engagement</span><a data-youtube-link href="https://www.youtube.com/@tills109">YouTube</a><a href="/politik">Politik & EVP</a>';
-  siteHeader.parentNode.insertBefore(topbar,siteHeader);
+    if (Array.isArray(settings.supportAmounts)) {
+      $$('.support-btn[data-support]').forEach((button, index) => {
+        const amount = Number(settings.supportAmounts[index]);
+        if (Number.isFinite(amount) && amount > 0) button.dataset.support = String(amount);
+      });
+    }
+  } catch {}
 }
 
-const menuToggle = $('.menu-toggle');
+$$('[data-year]').forEach(element => {
+  element.textContent = new Date().getFullYear();
+});
+
 const nav = $('.main-nav');
+const menuToggle = $('.menu-toggle');
+const page = document.body.dataset.page;
 
-// Auf jeder öffentlichen Seite exakt dieselbe Top-/Hamburger-Navigation anzeigen.
-if(nav){
+if (nav) {
   const navItems = [
     ['home', '/', 'Home'],
     ['about', '/ueber-mich', 'Über mich'],
-    ['team', '/team', 'Team'],
-    ['politics', '/politik', 'Politik & EVP'],
     ['projects', '/projekte', 'Projekte'],
-    ['support', '/unterstuetzen', 'Unterstützen'],
+    ['politics', '/politik', 'Politik / EVP'],
+    ['youtube', DEFAULT_YOUTUBE_URL, 'YouTube'],
+    ['team', '/team', 'Team'],
     ['contact', '/kontakt', 'Kontakt']
   ];
-  nav.innerHTML = navItems.map(([key, href, label]) => `<a data-nav="${key}" href="${href}">${label}</a>`).join('');
+
+  nav.innerHTML = navItems.map(([key, href, label]) => {
+    const external = key === 'youtube' ? ' data-youtube-link target="_blank" rel="noopener noreferrer"' : '';
+    return `<a data-nav="${key}" href="${href}"${external}>${label}</a>`;
+  }).join('');
+
+  if (page) {
+    const active = nav.querySelector(`[data-nav="${page}"]`);
+    if (active) active.classList.add('active');
+  }
 }
 
-function setMenuState(open){
-  if(!menuToggle || !nav) return;
+function setMenuState(open) {
+  if (!nav || !menuToggle) return;
   nav.classList.toggle('open', open);
   menuToggle.setAttribute('aria-expanded', String(open));
   menuToggle.setAttribute('aria-label', open ? 'Navigation schliessen' : 'Navigation öffnen');
 }
 
-if(menuToggle && nav){
+if (nav && menuToggle) {
   menuToggle.addEventListener('click', () => setMenuState(!nav.classList.contains('open')));
-  $$('.main-nav a').forEach(a => a.addEventListener('click',()=>setMenuState(false)));
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') setMenuState(false); });
-  window.addEventListener('resize',()=>{ if(window.innerWidth>1180) setMenuState(false); },{passive:true});
+  nav.addEventListener('click', event => {
+    if (event.target.closest('a')) setMenuState(false);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') setMenuState(false);
+  });
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1180) setMenuState(false);
+  }, { passive: true });
 }
 
-const page = document.body.dataset.page;
-if(page) {
-  const active = $(`[data-nav="${page}"]`);
-  if(active) active.classList.add('active');
-}
-
-// EVP-Mitgliedsbild auf Über-mich- und Projekte-Seite einbinden.
-(() => {
-  const imageSrc='/assets/evp-member.jpg';
-
-  if(page==='about'){
-    const engagementSection=$$('.section.section-dark').find(section => section.textContent.includes('Ich möchte mit Projekten auch etwas bewegen'));
-    if(engagementSection && !engagementSection.querySelector('[data-evp-member-image]')){
-      const content=engagementSection.querySelector('div[style*="max-width:920px"]');
-      const card=document.createElement('div');
-      card.dataset.evpMemberImage='true';
-      card.className='project-card';
-      card.style.cssText='max-width:920px;margin:0 0 32px;overflow:hidden;background:#f4f5f7;border-color:rgba(255,221,0,.4)';
-      card.innerHTML=`<img src="${imageSrc}" alt="Till Scheidegger – Mitglied der EVP" style="display:block;width:100%;max-height:720px;object-fit:contain;background:#fff">`;
-      if(content) engagementSection.insertBefore(card,content);
-      else engagementSection.appendChild(card);
-    }
-  }
-
-  if(page==='projects'){
-    const evpCard=$$('.project-card[data-category="engagement"]').find(card => card.textContent.includes('EVP-Mitglied') || card.textContent.includes('Engagement für Menschen mit Behinderungen'));
-    if(evpCard && !evpCard.querySelector('[data-evp-member-image]')){
-      const thumb=evpCard.querySelector('.project-thumb');
-      if(thumb){
-        thumb.dataset.evpMemberImage='true';
-        thumb.style.cssText='height:320px;background:#f4f5f7;overflow:hidden';
-        thumb.innerHTML=`<img src="${imageSrc}" alt="Till Scheidegger – Mitglied der EVP" style="width:100%;height:100%;object-fit:contain;display:block">`;
-      }
-    }
-  }
-})();
-
-// Header scroll state, reveal animations and subtle cursor glow.
-const header=$('.site-header');
-const syncHeader=()=>header?.classList.toggle('is-scrolled',window.scrollY>18);
+const header = $('.site-header');
+const syncHeader = () => header?.classList.toggle('is-scrolled', window.scrollY > 18);
 syncHeader();
-window.addEventListener('scroll',syncHeader,{passive:true});
-
-const revealTargets=$$('.section > *, .page-hero > *, .hero-copy > *, .hero-visual, .project-card, .support-card, .contact-card, .faq details');
-revealTargets.forEach((el,i)=>{
-  el.classList.add('reveal-ready');
-  el.dataset.revealDelay=String(i%5);
-  el.style.setProperty('--reveal-delay', String(i%5));
-});
-if('IntersectionObserver' in window){
-  const observer=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        entry.target.classList.add('reveal-in');
-        observer.unobserve(entry.target);
-      }
-    });
-  },{threshold:.08,rootMargin:'0px 0px -35px 0px'});
-  revealTargets.forEach(el=>observer.observe(el));
-}else revealTargets.forEach(el=>el.classList.add('reveal-in'));
-
-if(matchMedia('(pointer:fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-  const glow=document.createElement('div');
-  glow.className='cursor-glow';
-  document.body.appendChild(glow);
-  let tx=innerWidth/2,ty=innerHeight/2,cx=tx,cy=ty;
-  addEventListener('pointermove',e=>{tx=e.clientX;ty=e.clientY;glow.style.opacity='1';},{passive:true});
-  addEventListener('mouseout',e=>{if(!e.relatedTarget) glow.style.opacity='0';});
-  const follow=()=>{
-    cx+=(tx-cx)*.1;cy+=(ty-cy)*.1;
-    glow.style.transform=`translate(${cx-180}px,${cy-180}px)`;
-    requestAnimationFrame(follow);
-  };
-  follow();
-}
+window.addEventListener('scroll', syncHeader, { passive: true });
 
 let toastTimer;
-function toast(message){
-  const el = $('#toast');
-  if(!el) return;
-  el.textContent = message;
-  el.classList.add('show');
+function toast(message) {
+  const element = $('#toast');
+  if (!element) return;
+  element.textContent = message;
+  element.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => element.classList.remove('show'), 2600);
 }
 
 const projectButtons = $$('.filter[data-filter]');
 const projectCards = $$('.project-card[data-category]');
-if(projectButtons.length){
-  function applyProjectFilter(filter){
+if (projectButtons.length) {
+  function applyProjectFilter(filter) {
     let shown = 0;
-    projectButtons.forEach(b=>b.classList.toggle('active', b.dataset.filter===filter));
-    projectCards.forEach(card=>{
-      const visible = filter==='all' || card.dataset.category===filter;
+    projectButtons.forEach(button => button.classList.toggle('active', button.dataset.filter === filter));
+    projectCards.forEach(card => {
+      const visible = filter === 'all' || card.dataset.category === filter;
       card.hidden = !visible;
-      if(visible) shown++;
+      if (visible) shown += 1;
     });
     const empty = $('#emptyProjects');
-    if(empty) empty.hidden = shown !== 0;
+    if (empty) empty.hidden = shown !== 0;
   }
-  projectButtons.forEach(btn=>btn.addEventListener('click',()=>applyProjectFilter(btn.dataset.filter)));
-  const param = new URLSearchParams(location.search).get('filter');
-  if(param && ['minecraft','gaming','dev','youtube','engagement'].includes(param)) applyProjectFilter(param);
+
+  projectButtons.forEach(button => button.addEventListener('click', () => applyProjectFilter(button.dataset.filter)));
+  const filter = new URLSearchParams(location.search).get('filter');
+  if (filter && ['minecraft', 'gaming', 'dev', 'youtube', 'engagement'].includes(filter)) applyProjectFilter(filter);
 }
 
 let paymentsEnabled = false;
-async function loadPaymentStatus(){
-  const statusEl = $('#paymentStatus');
-  if(!statusEl) return;
-  try{
-    const res = await fetch('/api/payment/status', {cache:'no-store'});
-    const data = await res.json();
+async function loadPaymentStatus() {
+  const status = $('#paymentStatus');
+  if (!status) return;
+  try {
+    const response = await fetch('/api/payment/status', { cache: 'no-store' });
+    const data = await response.json();
     paymentsEnabled = Boolean(data.enabled);
-    statusEl.textContent = paymentsEnabled
-      ? `Sichere Online-Zahlung ist aktiv${Array.isArray(data.methods)&&data.methods.includes('twint') ? ' – Karte und TWINT werden über Stripe angeboten.' : '. Du wirst für die Zahlung zu Stripe weitergeleitet.'}`
+    status.textContent = paymentsEnabled
+      ? 'Sichere Online-Zahlung über Stripe ist aktiv.'
       : 'Online-Zahlungen sind noch nicht vollständig eingerichtet. Es wird aktuell kein Geld übertragen.';
-  }catch{
+  } catch {
     paymentsEnabled = false;
-    statusEl.textContent = 'Der Zahlungsstatus konnte gerade nicht geladen werden. Es wird keine Zahlung gestartet.';
-  }
-}
-loadPaymentStatus();
-
-async function startSupportPayment(amount, button){
-  if(!paymentsEnabled){ toast('Online-Zahlungen sind noch nicht vollständig eingerichtet'); return; }
-  const consent = Boolean($('#paymentConsent')?.checked);
-  if(!consent){ toast('Bitte zuerst die Hinweise bestätigen'); $('#paymentConsent')?.focus(); return; }
-  if(!Number.isFinite(amount) || amount < 1 || amount > 200){ toast('Bitte einen Betrag zwischen CHF 1 und CHF 200 wählen'); return; }
-  const originalText = button?.textContent;
-  if(button){ button.disabled = true; button.textContent = 'Stripe wird geöffnet...'; }
-  try{
-    const response = await fetch('/api/payment/create-checkout-session', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({amount, consent:true})
-    });
-    const data = await response.json().catch(()=>({}));
-    if(!response.ok || !data.url) throw new Error(data.error || 'Zahlung konnte nicht vorbereitet werden.');
-    window.location.assign(data.url);
-  }catch(err){
-    toast(err.message || 'Zahlung konnte nicht gestartet werden');
-    if(button){ button.disabled = false; button.textContent = originalText; }
+    status.textContent = 'Der Zahlungsstatus konnte gerade nicht geladen werden. Es wird keine Zahlung gestartet.';
   }
 }
 
-$$('.support-btn').forEach(btn => btn.addEventListener('click', () => startSupportPayment(Number(btn.dataset.support || 0), btn)));
-const customSupportBtn = $('#customSupportBtn');
-if(customSupportBtn){
-  customSupportBtn.addEventListener('click', () => {
-    const input = $('#customSupportAmount');
-    startSupportPayment(Number(input?.value || 0), customSupportBtn);
-  });
-}
-if(new URLSearchParams(location.search).get('payment') === 'cancelled') toast('Zahlung wurde abgebrochen – es wurde nichts belastet');
-
-async function verifyPaymentSuccess(){
-  const paymentResult = $('#paymentResult');
-  if(!paymentResult) return;
-  const sessionId = new URLSearchParams(location.search).get('session_id');
-  if(!sessionId){ paymentResult.textContent='Es wurde keine Zahlungs-ID gefunden.'; return; }
-  try{
-    const res=await fetch(`/api/payment/session-status?session_id=${encodeURIComponent(sessionId)}`, {cache:'no-store'});
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error || 'Zahlungsstatus konnte nicht geprüft werden.');
-    if(data.paid){
-      const amount = Number(data.amountTotal || 0) / 100;
-      paymentResult.textContent=`Zahlung bestätigt: CHF ${amount.toFixed(2)}. Vielen Dank für deine freiwillige Unterstützung!`;
-      paymentResult.dataset.state='success';
-    } else {
-      paymentResult.textContent='Die Zahlung ist noch nicht als bezahlt bestätigt.';
-      paymentResult.dataset.state='pending';
-    }
-  }catch(err){ paymentResult.textContent=err.message; }
-}
-verifyPaymentSuccess();
-
-const form=$('#contactForm');
-async function loadContactStatus(){
-  if(!form) return;
-  const status=$('#contactStatus');
-  try{
-    const res=await fetch('/api/contact/status',{cache:'no-store'});
-    const data=await res.json();
-    if(status && data.enabled) status.textContent='Kontakt ist online. Deine Nachricht wird direkt an Till gesendet.';
-    if(status && !data.enabled) status.textContent='Direkter Mailversand ist noch nicht eingerichtet. Du kannst weiterhin die angezeigte E-Mail-Adresse verwenden.';
-  }catch{}
-}
-loadContactStatus();
-
-if(form) form.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const submitBtn = $('#contactSubmit');
-  const status = $('#contactStatus');
-  const payload = {
-    name: $('#name')?.value.trim(),
-    email: $('#email')?.value.trim(),
-    subject: $('#subject')?.value.trim(),
-    message: $('#message')?.value.trim(),
-    privacyConsent: Boolean($('#privacyConsent')?.checked)
-  };
-  if(!payload.name || !payload.email || !payload.subject || !payload.message || !payload.privacyConsent){
-    if(status) status.textContent = 'Bitte alle Felder ausfüllen und dem Datenschutz zustimmen.';
-    toast('Bitte alle Pflichtfelder ausfüllen');
+async function startSupportPayment(amount, button) {
+  if (!paymentsEnabled) {
+    toast('Online-Zahlungen sind noch nicht vollständig eingerichtet');
     return;
   }
-  try{
-    if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Wird gesendet...'; }
-    if(status) status.textContent = 'Nachricht wird gesendet...';
-    const response = await fetch('/api/contact', {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
-    });
-    const data = await response.json().catch(()=>({}));
-    if(!response.ok){
-      const extra = data.fallbackEmail ? ` Alternativ kannst du an ${data.fallbackEmail} schreiben.` : '';
-      throw new Error((data.error || 'Nachricht konnte nicht gesendet werden.') + extra);
-    }
-    form.reset();
-    if(status) status.textContent = 'Danke! Deine Nachricht wurde erfolgreich an Till gesendet.';
-    toast('Nachricht erfolgreich gesendet ✓');
-  }catch(err){
-    if(status) status.textContent = err.message || 'Beim Senden ist ein Fehler aufgetreten.';
-    toast('Senden fehlgeschlagen');
-  }finally{
-    if(submitBtn){ submitBtn.disabled = false; submitBtn.textContent = 'Nachricht senden'; }
+  if (!$('#paymentConsent')?.checked) {
+    toast('Bitte zuerst die Hinweise bestätigen');
+    $('#paymentConsent')?.focus();
+    return;
   }
+  if (!Number.isFinite(amount) || amount < 1 || amount > 200) {
+    toast('Bitte einen Betrag zwischen 1 und 200 wählen');
+    return;
+  }
+
+  const originalText = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Stripe wird geöffnet...';
+  }
+
+  try {
+    const response = await fetch('/api/payment/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, consent: true })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.url) throw new Error(data.error || 'Zahlung konnte nicht vorbereitet werden.');
+    location.assign(data.url);
+  } catch (error) {
+    toast(error.message || 'Zahlung konnte nicht gestartet werden');
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+}
+
+$$('.support-btn[data-support]').forEach(button => {
+  button.addEventListener('click', () => startSupportPayment(Number(button.dataset.support || 0), button));
 });
+
+$('#customSupportBtn')?.addEventListener('click', event => {
+  startSupportPayment(Number($('#customSupportAmount')?.value || 0), event.currentTarget);
+});
+
+if (new URLSearchParams(location.search).get('payment') === 'cancelled') {
+  toast('Zahlung wurde abgebrochen – es wurde nichts belastet');
+}
+
+async function verifyPaymentSuccess() {
+  const result = $('#paymentResult');
+  if (!result) return;
+  const sessionId = new URLSearchParams(location.search).get('session_id');
+  if (!sessionId) {
+    result.textContent = 'Es wurde keine Zahlungs-ID gefunden.';
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/payment/session-status?session_id=${encodeURIComponent(sessionId)}`, { cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Zahlungsstatus konnte nicht geprüft werden.');
+    if (data.paid) {
+      const amount = Number(data.amountTotal || 0) / 100;
+      const currency = String(data.currency || 'CHF').toUpperCase();
+      result.textContent = `Zahlung bestätigt: ${currency} ${amount.toFixed(2)}. Vielen Dank für deine freiwillige Unterstützung!`;
+      result.dataset.state = 'success';
+    } else {
+      result.textContent = 'Die Zahlung ist noch nicht als bezahlt bestätigt.';
+      result.dataset.state = 'pending';
+    }
+  } catch (error) {
+    result.textContent = error.message;
+  }
+}
+
+const contactForm = $('#contactForm');
+async function loadContactStatus() {
+  if (!contactForm) return;
+  try {
+    const response = await fetch('/api/contact/status', { cache: 'no-store' });
+    const data = await response.json();
+    const status = $('#contactStatus');
+    if (!status) return;
+    status.textContent = data.enabled
+      ? 'Kontakt ist online. Deine Nachricht wird direkt an Till gesendet.'
+      : 'Direkter Mailversand ist noch nicht eingerichtet. Du kannst die angezeigte E-Mail-Adresse verwenden.';
+  } catch {}
+}
+
+if (contactForm) {
+  contactForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const submitButton = $('#contactSubmit');
+    const status = $('#contactStatus');
+    const payload = {
+      name: $('#name')?.value.trim(),
+      email: $('#email')?.value.trim(),
+      subject: $('#subject')?.value.trim(),
+      message: $('#message')?.value.trim(),
+      privacyConsent: Boolean($('#privacyConsent')?.checked)
+    };
+
+    if (!payload.name || !payload.email || !payload.subject || !payload.message || !payload.privacyConsent) {
+      if (status) status.textContent = 'Bitte alle Felder ausfüllen und dem Datenschutz zustimmen.';
+      toast('Bitte alle Pflichtfelder ausfüllen');
+      return;
+    }
+
+    try {
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Wird gesendet...';
+      }
+      if (status) status.textContent = 'Nachricht wird gesendet...';
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const fallback = data.fallbackEmail ? ` Alternativ kannst du an ${data.fallbackEmail} schreiben.` : '';
+        throw new Error((data.error || 'Nachricht konnte nicht gesendet werden.') + fallback);
+      }
+
+      contactForm.reset();
+      if (status) status.textContent = 'Danke! Deine Nachricht wurde erfolgreich an Till gesendet.';
+      toast('Nachricht erfolgreich gesendet ✓');
+    } catch (error) {
+      if (status) status.textContent = error.message || 'Beim Senden ist ein Fehler aufgetreten.';
+      toast('Senden fehlgeschlagen');
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Nachricht senden';
+      }
+    }
+  });
+}
+
+loadPublicSettings();
+loadPaymentStatus();
+verifyPaymentSuccess();
+loadContactStatus();
