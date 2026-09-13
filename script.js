@@ -5,7 +5,8 @@ const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
   const styles = [
     ['/design-2026.css', '/design-2026.css?v=20260912-1'],
     ['/bugfix-2026.css', '/bugfix-2026.css?v=20260912-1'],
-    ['/portal-2026.css', '/portal-2026.css?v=20260913-1']
+    ['/portal-2026.css', '/portal-2026.css?v=20260913-1'],
+    ['/modern-2026.css', '/modern-2026.css?v=20260913-1']
   ];
   styles.forEach(([prefix, href]) => {
     if(!document.querySelector(`link[href^="${prefix}"]`)){
@@ -151,6 +152,7 @@ const revealTargets=$$('.section > *, .page-hero > *, .hero-copy > *, .hero-visu
 revealTargets.forEach((el,i)=>{
   el.classList.add('reveal-ready');
   el.dataset.revealDelay=String(i%5);
+  el.style.setProperty('--reveal-delay', String(i%5));
 });
 if('IntersectionObserver' in window){
   const observer=new IntersectionObserver(entries=>{
