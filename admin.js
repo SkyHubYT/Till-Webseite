@@ -1,7 +1,8 @@
-
 const $ = s => document.querySelector(s);
 
 let toastTimer;
+let currentSettings = null;
+
 function toast(message){
   const el = $('#toast');
   if(!el) return;
@@ -29,6 +30,17 @@ function showLogin(){
 function showDashboard(){
   $('#loginView').hidden = true;
   $('#dashboardView').hidden = false;
+}
+
+function updateMaintenanceUi(){
+  const active = Boolean($('#maintenanceMode')?.checked);
+  const badge = $('#maintenanceBadge');
+  const status = $('#maintenanceStatus');
+  if(badge){
+    badge.textContent = active ? 'AKTIV' : 'AUS';
+    badge.style.color = active ? '#ffbf47' : '#72e5aa';
+  }
+  if(status) status.textContent = active ? 'Besucher sehen die Wartungsseite.' : 'Die Webseite ist öffentlich erreichbar.';
 }
 
 async function checkSession(){
@@ -74,6 +86,7 @@ $('#logoutBtn').addEventListener('click', async ()=>{
 async function loadSettings(){
   const data = await api('/api/admin/settings');
   const s = data.settings;
+  currentSettings = s;
   $('#siteTitle').value = s.siteTitle || '';
   $('#heroText').value = s.heroText || '';
   $('#youtubeUrl').value = s.youtubeUrl || '';
@@ -81,6 +94,23 @@ async function loadSettings(){
   $('#support1').value = s.supportAmounts?.[0] ?? 5;
   $('#support2').value = s.supportAmounts?.[1] ?? 10;
   $('#support3').value = s.supportAmounts?.[2] ?? 20;
+  $('#maintenanceMode').checked = Boolean(s.maintenanceMode);
+  updateMaintenanceUi();
+}
+
+function settingsPayload(maintenanceOverride){
+  return {
+    siteTitle:$('#siteTitle').value.trim(),
+    heroText:$('#heroText').value.trim(),
+    youtubeUrl:$('#youtubeUrl').value.trim(),
+    contactEmail:$('#contactEmail').value.trim(),
+    supportAmounts:[
+      Number($('#support1').value),
+      Number($('#support2').value),
+      Number($('#support3').value)
+    ],
+    maintenanceMode: maintenanceOverride ?? Boolean($('#maintenanceMode').checked)
+  };
 }
 
 $('#settingsForm').addEventListener('submit', async e=>{
@@ -88,25 +118,37 @@ $('#settingsForm').addEventListener('submit', async e=>{
   const status = $('#settingsStatus');
   try{
     status.textContent = 'Wird gespeichert...';
-    await api('/api/admin/settings',{
+    const data = await api('/api/admin/settings',{
       method:'PUT',
-      body:JSON.stringify({
-        siteTitle:$('#siteTitle').value.trim(),
-        heroText:$('#heroText').value.trim(),
-        youtubeUrl:$('#youtubeUrl').value.trim(),
-        contactEmail:$('#contactEmail').value.trim(),
-        supportAmounts:[
-          Number($('#support1').value),
-          Number($('#support2').value),
-          Number($('#support3').value)
-        ]
-      })
+      body:JSON.stringify(settingsPayload())
     });
+    currentSettings = data.settings;
     status.textContent = 'Einstellungen gespeichert ✓';
+    updateMaintenanceUi();
     toast('Einstellungen gespeichert');
   }catch(err){
     status.textContent = err.message;
     toast('Speichern fehlgeschlagen');
+  }
+});
+
+$('#maintenanceMode').addEventListener('change', updateMaintenanceUi);
+
+$('#saveMaintenanceBtn').addEventListener('click', async ()=>{
+  const status = $('#maintenanceStatus');
+  const enabled = Boolean($('#maintenanceMode').checked);
+  try{
+    status.textContent = enabled ? 'Wartungsmodus wird aktiviert...' : 'Wartungsmodus wird beendet...';
+    const data = await api('/api/admin/settings',{
+      method:'PUT',
+      body:JSON.stringify(settingsPayload(enabled))
+    });
+    currentSettings = data.settings;
+    updateMaintenanceUi();
+    toast(enabled ? 'Wartungsmodus aktiviert' : 'Webseite wieder öffentlich');
+  }catch(err){
+    status.textContent = err.message;
+    toast('Wartungsmodus konnte nicht gespeichert werden');
   }
 });
 
