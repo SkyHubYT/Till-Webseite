@@ -1,0 +1,1 @@
+(async()=>{try{const r=await fetch('/api/settings',{cache:'no-store',credentials:'same-origin'});if(r.status===503){location.replace('/maintenance');return;}if(!r.ok)return;const s=await r.json();if(s.maintenanceMode&&location.pathname!=='/maintenance'&&location.pathname!=='/maintenance.html')location.replace('/maintenance');}catch{}})();
