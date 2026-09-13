@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0e14">
-<meta name="description" content="Till – Minecraft, Gaming, Entwicklung und kreative Projekte.">
+<meta name="description" content="Till – Projekte freiwillig in CHF oder EUR unterstützen.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <title>Unterstützen | Till Gaming & Dev</title></head>
@@ -17,6 +17,9 @@
   <button class="menu-toggle" aria-label="Navigation öffnen" aria-expanded="false">☰</button>
   <nav class="main-nav">
     <a data-nav="home" href="/">Home</a>
+    <a data-nav="about" href="/ueber-mich">Über mich</a>
+    <a data-nav="team" href="/team">Team</a>
+    <a data-nav="politics" href="/politik">Politik & EVP</a>
     <a data-nav="projects" href="/projekte">Projekte</a>
     <a data-nav="support" href="/unterstuetzen">Unterstützen</a>
     <a data-nav="contact" href="/kontakt">Kontakt</a>
@@ -27,24 +30,31 @@
 <section class="page-hero compact">
   <span class="eyebrow">PROJEKTE UNTERSTÜTZEN</span>
   <h1>Freiwillig unterstützen.</h1>
-  <p>Wenn dir meine Projekte gefallen, kannst du sie freiwillig unterstützen. Die Unterstützung ist keine Bezahlung für eine Leistung und es entsteht kein Anspruch auf ein Produkt oder eine Gegenleistung.</p>
+  <p>Wenn dir meine Projekte gefallen, kannst du sie freiwillig unterstützen. Du kannst dabei zwischen Schweizer Franken und Euro wählen.</p>
 </section>
 
 <section class="section support-section">
   <div class="support-intro">
     <span class="eyebrow">FREIWILLIGE UNTERSTÜTZUNG</span>
     <h2>Hilf mit, neue Projekte möglich zu machen.</h2>
-    <p>
-      Meine Projekte entstehen aus Freude an Minecraft, Gaming, Informatik und kreativen Ideen.
-      Wenn du möchtest, kannst du mich freiwillig unterstützen. Deine Unterstützung hilft zum Beispiel
-      bei Hosting, Software, Entwicklung, Grafiken oder neuen Projektideen.
-    </p>
-    <div class="support-note">
-      <strong>Zahlung:</strong> Der Bezahlvorgang läuft sicher über Stripe Checkout. Unterstützte Zahlungsarten können Karte und – nach Freischaltung im Stripe-Konto – TWINT umfassen. Alle Beträge werden in Schweizer Franken (CHF) angezeigt.
+    <p>Die Unterstützung kann zum Beispiel für Hosting, Software, Entwicklung, Grafiken oder neue Projektideen eingesetzt werden.</p>
+
+    <div class="support-note" style="display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+      <div>
+        <strong>Währung wählen</strong><br>
+        <span data-payment-currency-hint>CHF: Zahlung über Stripe. Karte und – falls im Stripe-Konto verfügbar – TWINT.</span>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;font-weight:800">
+        Währung
+        <select id="currencySelect" aria-label="Währung auswählen" style="background:#0f1722;color:#fff;border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:10px 14px;font:inherit;font-weight:800">
+          <option value="CHF">CHF – Schweizer Franken</option>
+          <option value="EUR">EUR – Euro</option>
+        </select>
+      </label>
     </div>
+
     <div class="support-note">
-      <strong>Wichtig:</strong> Die Unterstützung ist freiwillig und keine Bezahlung für eine Ware oder Dienstleistung.
-      Es gibt keine garantierte Gegenleistung und keinen Anspruch auf bestimmte Inhalte. Es handelt sich nicht um eine steuerbegünstigte Spende.
+      <strong>Wichtig:</strong> Die Unterstützung ist freiwillig und keine Bezahlung für eine Ware oder Dienstleistung. Es gibt keine garantierte Gegenleistung und keinen Anspruch auf bestimmte Inhalte. Es handelt sich nicht um eine steuerbegünstigte Spende.
     </div>
   </div>
 
@@ -61,7 +71,7 @@
       <div class="support-icon">🚀</div>
       <span class="pill">Projekt-Support</span>
       <h3>Projekt fördern</h3>
-      <p>Unterstütze die Weiterentwicklung meiner Minecraft-, Gaming- und Informatik-Projekte.</p>
+      <p>Unterstütze die Weiterentwicklung meiner Gaming-, Video- und Informatik-Projekte.</p>
       <button class="support-btn" data-support="10">CHF 10 unterstützen</button>
     </article>
 
@@ -78,10 +88,10 @@
     <div>
       <span class="eyebrow">EIGENER BETRAG</span>
       <h3>Du entscheidest selbst.</h3>
-      <p>Du kannst einen freiwilligen Betrag zwischen CHF 1 und CHF 200 wählen.</p>
+      <p data-currency-range>Du kannst einen freiwilligen Betrag zwischen CHF 1 und CHF 200 wählen.</p>
     </div>
     <div class="custom-support-box">
-      <span>CHF</span>
+      <span data-currency-symbol>CHF</span>
       <input id="customSupportAmount" type="number" min="1" max="200" step="1" placeholder="z. B. 15">
       <button class="btn btn-primary" id="customSupportBtn">Unterstützen</button>
     </div>
@@ -90,7 +100,7 @@
   <div class="support-note" style="margin-top:22px">
     <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
       <input id="paymentConsent" type="checkbox" style="margin-top:5px">
-      <span>Ich habe verstanden, dass die Unterstützung freiwillig ist, keine Ware oder Dienstleistung gekauft wird und Zahlungsdaten beim Zahlungsanbieter verarbeitet werden. <a href="/impressum#datenschutz" style="text-decoration:underline">Datenschutz lesen</a>. Wenn ich minderjährig bin, nutze ich eine Zahlung nur mit Zustimmung meiner Eltern oder Erziehungsberechtigten.</span>
+      <span>Ich habe verstanden, dass die Unterstützung freiwillig ist, keine Ware oder Dienstleistung gekauft wird und Zahlungsdaten beim Zahlungsanbieter verarbeitet werden. <a href="/impressum#datenschutz" style="text-decoration:underline">Datenschutz lesen</a>.</span>
     </label>
   </div>
 
@@ -99,16 +109,13 @@
     <div class="transparency-grid">
       <div><b>Server & Hosting</b><span>Für Webseiten, Gameserver und Projekt-Systeme.</span></div>
       <div><b>Entwicklung</b><span>Für Tools, Software und technische Erweiterungen.</span></div>
-      <div><b>Kreative Projekte</b><span>Für neue Minecraft-, Gaming- und Video-Ideen.</span></div>
+      <div><b>Kreative Projekte</b><span>Für neue Gaming-, Web- und Video-Ideen.</span></div>
       <div><b>Community</b><span>Für grössere und bessere Projekte auf dem Kanal.</span></div>
     </div>
   </div>
 
-  <div class="support-warning" id="paymentStatus" aria-live="polite">
-    Zahlungsstatus wird geprüft …
-  </div>
+  <div class="support-warning" id="paymentStatus" aria-live="polite">Zahlungsstatus wird geprüft …</div>
 </section>
-
 </main>
 
 <footer class="site-footer">
@@ -118,12 +125,13 @@
         <span class="brand-mark">T</span>
         <span class="brand-copy"><b>TILL</b><small>GAMING & DEV</small></span>
       </a>
-      <p>Minecraft, Gaming, Informatik und eigene kreative Projekte.</p>
+      <p>Gaming, Entwicklung, YouTube und eigene Projekte.</p>
     </div>
     <div>
       <h4>Entdecken</h4>
+      <a href="/ueber-mich">Über mich</a>
+      <a href="/politik">Politik & EVP</a>
       <a href="/projekte">Projekte</a>
-      <a href="/unterstuetzen">Unterstützen</a>
       <a href="/kontakt">Kontakt</a>
     </div>
     <div>
@@ -132,10 +140,9 @@
       <a href="/impressum#datenschutz">Datenschutz</a>
     </div>
   </div>
-  <div class="footer-bottom">
-    <span>© <span data-year></span> Till</span>
-    <span>Made for Gaming & Creative Projects</span>
-  </div>
+  <div class="footer-bottom"><span>© <span data-year></span> Till</span><span>CHF · EUR · Stripe</span></div>
 </footer>
 <div class="toast" id="toast" role="status"></div>
-<script src="script.js?v=20260912-2"></script></body></html>
+<script src="script.js?v=20260913-currency"></script>
+<script src="currency-support.js?v=20260913-1"></script>
+</body></html>
