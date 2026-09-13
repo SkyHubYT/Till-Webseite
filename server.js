@@ -22,10 +22,10 @@ const ADMIN_FILE = path.join(DATA_DIR, 'admin-user.json');
 
 const DEFAULT_SETTINGS = {
   siteTitle: 'Till Gaming & Dev',
-  youtubeUrl: 'https://www.youtube.com/',
-  contactEmail: process.env.CONTACT_TO || 'contact@example.com',
+  youtubeUrl: 'https://www.youtube.com/@tills109',
+  contactEmail: process.env.CONTACT_TO || 'tillscheidegget@gmail.com',
   supportAmounts: [5, 10, 20],
-  heroText: 'Minecraft, Gaming, Entwicklung und kreative Projekte.',
+  heroText: 'Gaming, Entwicklung, YouTube und eigene Projekte.',
   maintenanceMode: false
 };
 
@@ -61,7 +61,7 @@ function getSettings() { ensureSettings(); return { ...DEFAULT_SETTINGS, ...read
 app.use((req, res, next) => {
   const pathname = req.path;
   const allowed = pathname === '/maintenance' || pathname === '/maintenance.html' || pathname === '/admin' || pathname === '/admin.html' || pathname === '/admin.js' || pathname === '/style.css' || pathname === '/health' || pathname.startsWith('/assets/') || pathname.startsWith('/api/admin/');
-  if (allowed || req.session?.admin === true) return next();
+  if (allowed) return next();
   if (!getSettings().maintenanceMode) return next();
   if (pathname.startsWith('/api/')) return res.status(503).json({ error: 'Die Webseite befindet sich aktuell im Wartungsmodus.', maintenance: true });
   return res.redirect(302, '/maintenance');
@@ -119,26 +119,61 @@ app.get('/zahlung-erfolgreich', (req, res) => res.sendFile(path.join(__dirname, 
 
 app.get('/api/settings', (req, res) => { const s = getSettings(); res.json({ ...s, maintenanceMode: Boolean(s.maintenanceMode) }); });
 app.get('/api/contact/status', (req, res) => res.json({ enabled: Boolean(process.env.RESEND_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)) }));
-app.get('/api/payment/status', (req, res) => res.json({ enabled: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY), provider: 'stripe', currency: 'CHF', methods: ['card', 'twint'] }));
+app.get('/api/payment/status', (req, res) => res.json({
+  enabled: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY),
+  provider: 'stripe',
+  currencies: ['CHF', 'EUR'],
+  defaultCurrency: 'CHF',
+  methodsByCurrency: { CHF: ['card', 'twint'], EUR: ['card'] }
+}));
 
 app.post('/api/payment/create-checkout-session', paymentLimiter, async (req, res) => {
   if (!PAYMENT_ENABLED || !process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'Online-Zahlungen sind noch nicht vollständig eingerichtet.' });
   const amount = Number(req.body.amount);
-  if (req.body.consent !== true || !Number.isFinite(amount) || amount < 1 || amount > 200) return res.status(400).json({ error: 'Ungültige Zahlungsanfrage.' });
+  const currency = clean(req.body.currency, 3).toLowerCase();
+  if (req.body.consent !== true || !Number.isFinite(amount) || amount < 1 || amount > 200 || !['chf', 'eur'].includes(currency)) {
+    return res.status(400).json({ error: 'Ungültige Zahlungsanfrage.' });
+  }
+
   const baseUrl = getBaseUrl(req);
   const params = new URLSearchParams();
   params.set('mode', 'payment');
   params.set('success_url', `${baseUrl}/zahlung-erfolgreich?session_id={CHECKOUT_SESSION_ID}`);
   params.set('cancel_url', `${baseUrl}/unterstuetzen?payment=cancelled`);
-  params.set('payment_method_types[0]', 'card'); params.set('payment_method_types[1]', 'twint');
-  params.set('line_items[0][price_data][currency]', 'chf'); params.set('line_items[0][price_data][product_data][name]', 'Freiwillige Projekt-Unterstützung');
-  params.set('line_items[0][price_data][unit_amount]', String(Math.round(amount * 100))); params.set('line_items[0][quantity]', '1');
+  params.set('payment_method_types[0]', 'card');
+  if (currency === 'chf') params.set('payment_method_types[1]', 'twint');
+  params.set('line_items[0][price_data][currency]', currency);
+  params.set('line_items[0][price_data][product_data][name]', 'Freiwillige Projekt-Unterstützung');
+  params.set('line_items[0][price_data][product_data][description]', 'Freiwilliger Beitrag ohne Anspruch auf Ware oder Dienstleistung.');
+  params.set('line_items[0][price_data][unit_amount]', String(Math.round(amount * 100)));
+  params.set('line_items[0][quantity]', '1');
+  params.set('metadata[purpose]', 'project_support');
+  params.set('metadata[currency]', currency.toUpperCase());
+
   try {
-    const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST', headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+    const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
     const data = await stripeResponse.json();
-    if (!stripeResponse.ok || !data.url) return res.status(502).json({ error: 'Die Zahlungsseite konnte gerade nicht erstellt werden.' });
+    if (!stripeResponse.ok || !data.url) return res.status(502).json({ error: data?.error?.message || 'Die Zahlungsseite konnte gerade nicht erstellt werden.' });
     res.json({ url: data.url });
   } catch { res.status(502).json({ error: 'Der Zahlungsanbieter ist gerade nicht erreichbar.' }); }
+});
+
+app.get('/api/payment/session-status', async (req, res) => {
+  if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: 'Zahlungssystem nicht eingerichtet.' });
+  const sessionId = clean(req.query.session_id, 200);
+  if (!/^cs_[A-Za-z0-9_]+$/.test(sessionId)) return res.status(400).json({ error: 'Ungültige Zahlungs-ID.' });
+  try {
+    const stripeResponse = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+      headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}` }
+    });
+    const data = await stripeResponse.json();
+    if (!stripeResponse.ok) return res.status(502).json({ error: 'Zahlungsstatus konnte nicht geprüft werden.' });
+    res.json({ paid: data.payment_status === 'paid', status: data.status, amountTotal: data.amount_total, currency: String(data.currency || '').toUpperCase() });
+  } catch { res.status(502).json({ error: 'Zahlungsstatus konnte nicht geprüft werden.' }); }
 });
 
 app.post('/api/contact', contactLimiter, async (req, res) => {
@@ -181,7 +216,12 @@ app.put('/api/admin/password', requireAdmin, async (req, res) => {
 });
 
 app.get('/health', (req, res) => { const settings = getSettings(); res.json({ ok: true, env: IS_PROD ? 'production' : 'development', maintenance: Boolean(settings.maintenanceMode) }); });
-app.use(express.static(path.join(__dirname), { extensions: ['html'], maxAge: IS_PROD ? '1h' : 0, setHeaders(res, filePath) { if (filePath.endsWith('admin.html') || filePath.endsWith('admin.js') || filePath.endsWith('maintenance.html')) res.setHeader('Cache-Control', 'no-store'); } }));
+app.use(express.static(path.join(__dirname), {
+  extensions: ['html'], maxAge: IS_PROD ? '1h' : 0,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('admin.html') || filePath.endsWith('admin.js') || filePath.endsWith('maintenance.html') || filePath.endsWith('currency-support.js')) res.setHeader('Cache-Control', 'no-store');
+  }
+}));
 app.use((req, res) => { if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Nicht gefunden.' }); res.status(404).sendFile(path.join(__dirname, 'index.html')); });
 
 Promise.resolve().then(ensureSettings).then(ensureAdmin).then(() => app.listen(PORT, HOST, () => console.log(`Till Website läuft auf ${HOST}:${PORT}`))).catch(err => { console.error('Server konnte nicht gestartet werden:', err.message); process.exit(1); });
