@@ -113,7 +113,7 @@ if(page) {
 
 // EVP-Mitgliedsbild auf Über-mich- und Projekte-Seite einbinden.
 (() => {
-  const imageSrc='/assets/evp-member.svg';
+  const imageSrc='/assets/evp-member.jpg';
 
   if(page==='about'){
     const engagementSection=$$('.section.section-dark').find(section => section.textContent.includes('Ich möchte mit Projekten auch etwas bewegen'));
