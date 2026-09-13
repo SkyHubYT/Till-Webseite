@@ -1,10 +1,11 @@
 const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
 
-// Global 2026 design + bugfix layers
+// Global 2026 design + bugfix + clean portal layers
 (() => {
   const styles = [
     ['/design-2026.css', '/design-2026.css?v=20260912-1'],
-    ['/bugfix-2026.css', '/bugfix-2026.css?v=20260912-1']
+    ['/bugfix-2026.css', '/bugfix-2026.css?v=20260912-1'],
+    ['/portal-2026.css', '/portal-2026.css?v=20260913-1']
   ];
   styles.forEach(([prefix, href]) => {
     if(!document.querySelector(`link[href^="${prefix}"]`)){
@@ -15,6 +16,8 @@ const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/@tills109';
     }
   });
 })();
+
+document.body.classList.add('portal-ui');
 
 function normalizeYoutubeUrl(url){
   const value = String(url || '').trim();
@@ -60,6 +63,15 @@ const $ = (s, root=document) => root.querySelector(s);
 const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 
 $$('[data-year]').forEach(el => el.textContent = new Date().getFullYear());
+
+// Eigene schlanke Infoleiste oberhalb der Navigation.
+const siteHeader=$('.site-header');
+if(siteHeader && !$('.till-topbar')){
+  const topbar=document.createElement('div');
+  topbar.className='till-topbar';
+  topbar.innerHTML='<span><strong>TILL</strong> · Gaming · Development · Engagement</span><a data-youtube-link href="https://www.youtube.com/@tills109">YouTube</a><a href="/politik">Politik & EVP</a>';
+  siteHeader.parentNode.insertBefore(topbar,siteHeader);
+}
 
 const menuToggle = $('.menu-toggle');
 const nav = $('.main-nav');
