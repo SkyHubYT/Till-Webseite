@@ -84,6 +84,23 @@
       </form>
 
       <div class="admin-column">
+        <section class="admin-card" style="border-color:rgba(255,191,71,.22)">
+          <div class="admin-section-title">
+            <h2>Wartungsmodus</h2>
+            <span id="maintenanceBadge">Status</span>
+          </div>
+          <p class="admin-muted">Ist der Wartungsmodus aktiv, sehen normale Besucher nur die neue Wartungsseite. Dein angemeldeter Admin-Zugang bleibt verfügbar.</p>
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0">
+            <span><b>Webseite sperren</b><br><small>Wartungsseite für Besucher anzeigen</small></span>
+            <input id="maintenanceMode" type="checkbox" style="width:24px;height:24px;accent-color:#2f9cff">
+          </label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="saveMaintenanceBtn" type="button">Wartungsmodus speichern</button>
+            <a class="btn btn-ghost" href="/maintenance" target="_blank" rel="noopener">Vorschau</a>
+          </div>
+          <small id="maintenanceStatus" style="display:block;margin-top:12px">Noch keine Änderung.</small>
+        </section>
+
         <section class="admin-card">
           <div class="admin-section-title">
             <h2>Sicherheit</h2>
@@ -108,10 +125,10 @@
               <input id="currentPassword" type="password" required>
             </label>
             <label>Neues Passwort
-              <input id="newPassword" type="password" minlength="8" required>
+              <input id="newPassword" type="password" minlength="12" required>
             </label>
             <label>Neues Passwort wiederholen
-              <input id="newPassword2" type="password" minlength="8" required>
+              <input id="newPassword2" type="password" minlength="12" required>
             </label>
             <button class="btn btn-primary" type="submit">Passwort ändern</button>
             <small id="passwordStatus"></small>
@@ -122,6 +139,6 @@
   </section>
 </main>
 <div class="toast" id="toast"></div>
-<script src="admin.js"></script>
+<script src="admin.js?v=20260913-maintenance"></script>
 </body>
 </html>
