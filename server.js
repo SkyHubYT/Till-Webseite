@@ -27,7 +27,8 @@ const DEFAULT_SETTINGS = {
   youtubeUrl: 'https://www.youtube.com/',
   contactEmail: process.env.CONTACT_TO || 'tillscheidegget@gmail.com',
   supportAmounts: [5, 10, 20],
-  heroText: 'Minecraft, Gaming, Entwicklung und kreative Projekte.'
+  heroText: 'Minecraft, Gaming, Entwicklung und kreative Projekte.',
+  maintenanceMode: false
 };
 
 app.set('trust proxy', 1);
@@ -66,6 +67,17 @@ app.use(session({
   }
 }));
 
+app.use((req, res, next) => {
+  const pathname = req.path;
+  const alwaysAllowed = pathname === '/maintenance' || pathname === '/maintenance.html' || pathname === '/admin' || pathname === '/admin.html' || pathname === '/admin.js' || pathname === '/style.css' || pathname === '/health' || pathname.startsWith('/assets/') || pathname.startsWith('/api/admin/');
+  if (alwaysAllowed || req.session?.admin === true) return next();
+  const settings = getSettings();
+  if (!settings.maintenanceMode) return next();
+  if (pathname.startsWith('/api/')) return res.status(503).json({ error: 'Die Webseite befindet sich aktuell im Wartungsmodus.', maintenance: true });
+  res.set('Cache-Control', 'no-store');
+  return res.status(503).sendFile(path.join(__dirname, 'maintenance.html'));
+});
+
 const contactLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false, message: { error: 'Zu viele Nachrichten. Bitte versuche es später erneut.' } });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 8, standardHeaders: true, legacyHeaders: false, message: { error: 'Zu viele Login-Versuche. Bitte versuche es später erneut.' } });
 const paymentLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false, message: { error: 'Zu viele Zahlungsanfragen. Bitte versuche es später erneut.' } });
@@ -78,7 +90,7 @@ function escapeHtml(value) {
 function readJson(file, fallback) { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; } }
 function writeJson(file, data) { fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8'); }
 function ensureSettings() { if (!fs.existsSync(SETTINGS_FILE)) writeJson(SETTINGS_FILE, DEFAULT_SETTINGS); }
-function getSettings() { ensureSettings(); return readJson(SETTINGS_FILE, DEFAULT_SETTINGS); }
+function getSettings() { ensureSettings(); return { ...DEFAULT_SETTINGS, ...readJson(SETTINGS_FILE, DEFAULT_SETTINGS) }; }
 
 async function ensureAdmin() {
   if (fs.existsSync(ADMIN_FILE)) return;
@@ -145,6 +157,7 @@ async function sendContactViaSmtp({ to, name, email, subject, message }) {
 }
 
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
 app.get('/kontakt', (req, res) => res.sendFile(path.join(__dirname, 'kontakt.html')));
 app.get('/projekte', (req, res) => res.sendFile(path.join(__dirname, 'projekte.html')));
 app.get('/unterstuetzen', (req, res) => res.sendFile(path.join(__dirname, 'shop.html')));
@@ -296,8 +309,9 @@ app.put('/api/admin/settings', requireAdmin, (req, res) => {
   const youtubeUrl = clean(req.body.youtubeUrl, 500);
   const contactEmail = clean(req.body.contactEmail, 200);
   const amounts = Array.isArray(req.body.supportAmounts) ? req.body.supportAmounts.map(Number) : [];
+  const maintenanceMode = req.body.maintenanceMode === true;
   if (!siteTitle || !heroText || !youtubeUrl || !validEmail(contactEmail) || amounts.length !== 3 || amounts.some(v => !Number.isFinite(v) || v < 1 || v > 200)) return res.status(400).json({ error: 'Ungültige Einstellungen.' });
-  const settings = { siteTitle, heroText, youtubeUrl, contactEmail, supportAmounts: amounts };
+  const settings = { siteTitle, heroText, youtubeUrl, contactEmail, supportAmounts: amounts, maintenanceMode };
   writeJson(SETTINGS_FILE, settings);
   res.json({ ok: true, settings });
 });
@@ -319,7 +333,8 @@ app.get('/health', (req, res) => {
     ok: true,
     env: IS_PROD ? 'production' : 'development',
     contact: Boolean(process.env.RESEND_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)),
-    payments: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY)
+    payments: PAYMENT_ENABLED && Boolean(process.env.STRIPE_SECRET_KEY),
+    maintenance: Boolean(getSettings().maintenanceMode)
   });
 });
 
@@ -327,7 +342,7 @@ app.use(express.static(path.join(__dirname), {
   extensions: ['html'],
   maxAge: IS_PROD ? '1h' : 0,
   setHeaders(res, filePath) {
-    if (filePath.endsWith('admin.html') || filePath.endsWith('admin.js')) res.setHeader('Cache-Control', 'no-store');
+    if (filePath.endsWith('admin.html') || filePath.endsWith('admin.js') || filePath.endsWith('maintenance.html')) res.setHeader('Cache-Control', 'no-store');
   }
 }));
 
@@ -344,6 +359,7 @@ Promise.resolve()
       console.log(`Till Website läuft auf ${HOST}:${PORT}`);
       console.log(`Kontakt: ${process.env.RESEND_API_KEY ? 'Resend HTTPS' : (process.env.SMTP_USER ? 'SMTP-Fallback' : 'nicht eingerichtet')}`);
       console.log(`Online-Zahlungen: ${PAYMENT_ENABLED && process.env.STRIPE_SECRET_KEY ? 'aktiv' : 'noch nicht vollständig eingerichtet'}`);
+      console.log(`Wartungsmodus: ${getSettings().maintenanceMode ? 'aktiv' : 'aus'}`);
     });
   })
   .catch(err => { console.error('Server konnte nicht gestartet werden:', err.message); process.exit(1); });
